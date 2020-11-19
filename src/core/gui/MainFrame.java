@@ -4,14 +4,13 @@ import core.client.ClientGame;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.function.Predicate;
 
 public class MainFrame extends JFrame {
 
     private JPanel mainPanel;
-    ClientGame game;
+    private ClientGame game;
     public MainFrame() {
-        game = new ClientGame();
-
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setTitle("Legyen Ön Is Milliomos");
         setResizable(false);
@@ -22,19 +21,25 @@ public class MainFrame extends JFrame {
         MainMenuPanel menuPanel = new MainMenuPanel(this);
         mainPanel.add(menuPanel, "MENU");
 
-        HighScorePanel scorePanel = new HighScorePanel(this, game);
+        HighScorePanel scorePanel = new HighScorePanel(this);
         mainPanel.add(scorePanel, "HIGHSCORES");
 
-        GamePanel gamePanel = new GamePanel(this, game);
+        GamePanel gamePanel = new GamePanel(this);
         mainPanel.add(gamePanel, "GAME");
 
         pack();
         setVisible(true);
     }
 
+    public void setGame(ClientGame clientGame) {
+        game = clientGame;
+    }
+
     @Override
     public void dispose() {
-        game.closed();
+        if(game != null) {
+            game.testSendDisconnect();
+        }
         super.dispose();
     }
 }

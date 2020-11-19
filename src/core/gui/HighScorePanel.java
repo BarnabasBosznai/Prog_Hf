@@ -18,7 +18,7 @@ public class HighScorePanel extends JPanel {
 
     private TableModel model;
 
-    public HighScorePanel(JFrame frame, ClientGame game) {
+    public HighScorePanel(JFrame frame/*, ClientGame game*/) {
 
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -84,7 +84,7 @@ public class HighScorePanel extends JPanel {
 
         table.setRowHeight(25);
 
-        addComponentListener(new ScorePanelComponenetListener(game));
+        //addComponentListener(new ScorePanelComponenetListener(game));
 
         scrollPane.setViewportView(table);
         setLayout(groupLayout);
@@ -109,7 +109,7 @@ public class HighScorePanel extends JPanel {
 
         @Override
         public void componentShown(ComponentEvent e) {
-            model.setModelData(game.getScores());
+            //model.setModelData(game.getScores());
         }
 
         @Override

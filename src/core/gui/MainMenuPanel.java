@@ -1,10 +1,7 @@
 package core.gui;
 
-import core.client.ClientGame;
-
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
 
 public class MainMenuPanel extends JPanel {
 
@@ -18,7 +15,7 @@ public class MainMenuPanel extends JPanel {
             cl.show(frame.getContentPane(), "GAME");
         });
 
-        JButton highScores = new JButton("Dicsőséglistas");
+        JButton highScores = new JButton("Dicsőséglista");
         highScores.setPreferredSize(new Dimension(60, 25));
         highScores.setFont(new Font("Tahoma", Font.PLAIN, 22));
         highScores.setFocusPainted(false);

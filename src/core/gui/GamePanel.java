@@ -1,14 +1,12 @@
 package core.gui;
 
 import core.client.ClientGame;
-import core.question.Question;
+import core.util.Pair;
 
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
+import java.awt.event.*;
 import java.util.List;
 import java.util.Random;
 import java.util.StringTokenizer;
@@ -23,8 +21,7 @@ public class GamePanel extends JPanel {
 
     private JButton[] ansButtons = new JButton[4];
 
-    public GamePanel(JFrame frame, ClientGame clientGame) {
-        game = clientGame;
+    public GamePanel(MainFrame frame) {
         crowdHelp = new JButton("<html>Közönség<br>szavazás</html>");
         crowdHelp.setPreferredSize(new Dimension(120, 55));
         crowdHelp.setFocusPainted(false);
@@ -99,14 +96,20 @@ public class GamePanel extends JPanel {
         }
 
         splitHelp.addActionListener((ActionListener) -> {
-            int temp = 0;
-            for(int i = 0; temp != 2 && i < 4; i++) {
-                if(game.question.getAnswerIndex() != i) {
-                    ansButtons[i].setEnabled(false);
-                    temp++;
+            Pair<Boolean, Integer> pair = game.testSplitHelp();
+            if(pair.getFirst()) {
+                Random random = new Random();
+                int idx = pair.getSecond();
+                int count = 0;
+                while(count != 2) {
+                    int temp = random.nextInt(4);
+                    if(temp != idx && ansButtons[temp].isEnabled()) {
+                        ansButtons[temp].setEnabled(false);
+                        count++;
+                    }
                 }
+                splitHelp.setEnabled(false);
             }
-            splitHelp.setEnabled(false);
         });
 
         crowdHelp.addActionListener((ActionListener) -> {
@@ -116,39 +119,49 @@ public class GamePanel extends JPanel {
                     count++;
                 }
             }
-            int idx = 0;
-            List<Integer> votes = game.n_random(100, count);
-            for(int i = 0; i < 4; i++) {
-                if(ansButtons[i].isEnabled()) {
-                    ansButtons[i].setText(ansButtons[i].getText() + " " + votes.get(idx++) + "%");
+
+            List<Integer> v = game.testCrowdHelp(count);
+            if(v != null) {
+                int idx = 0;
+                for(int i = 0; i < 4; i++) {
+                    if(ansButtons[i].isEnabled()) {
+                        ansButtons[i].setText(ansButtons[i].getText() + " " + v.get(idx++) + "%");
+                    }
                 }
+                crowdHelp.setEnabled(false);
             }
-            crowdHelp.setEnabled(false);
         });
 
-        addComponentListener(new GamePanelComponentListener(game));
+        newQuestionHelp.addActionListener((ActionListener) -> {
+            if(game.testSwapQuestionHelp()) {
+                setupUINextQuestionTest();
+            }
+            newQuestionHelp.setEnabled(false);
+        });
+        addComponentListener(new GamePanelComponentListener(frame));
     }
 
-    private void setupUINewQuestion() {
-        game.getNextQuestion();
-        String[] ans = game.question.getAnswers();
+    private void setupUINextQuestionTest() {
         questionLabel.setText(wrapText(game.question.getQuestion()));
+        String[] ans = game.question.getAnswers();
         for(int i = 0; i < 4; i++) {
             ansButtons[i].setText(((char)(65 + i)) + ") " + ans[i]);
             ansButtons[i].setEnabled(true);
         }
     }
 
-    private void answerButtonFunc(JFrame frame, int index) {
-        if(game.question.getAnswerIndex() == index) {
-            setupUINewQuestion();
+    private void answerButtonFunc(MainFrame frame, int index) {
+        if(game.testSendAnswer(index)) {
+            setupUINextQuestionTest();
         } else {
-            game.gameOver();
+            game.testSendDisconnect();
+            frame.setGame(null);
             CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
             cl.show(frame.getContentPane(), "MENU");
         }
     }
 
+    // ???
     private String wrapText(String string){
         //Return string initialized with opening html tag
         String returnString="<html>";
@@ -191,11 +204,16 @@ public class GamePanel extends JPanel {
         return returnString;
     }
 
-    private class GamePanelComponentListener implements ComponentListener {
-        private ClientGame game;
+    private void onConnect(MainFrame frame) {
+        game = new ClientGame();
+        frame.setGame(game);
+    }
 
-        public GamePanelComponentListener(ClientGame g) {
-            game = g;
+    private class GamePanelComponentListener implements ComponentListener {
+
+        private MainFrame frame;
+        public GamePanelComponentListener(MainFrame mainFrame) {
+            frame = mainFrame;
         }
 
         @Override
@@ -210,15 +228,16 @@ public class GamePanel extends JPanel {
 
         @Override
         public void componentShown(ComponentEvent e) {
+            System.out.println("ComponenetShown got called!");
+            onConnect(frame);
             newQuestionHelp.setEnabled(true);
             crowdHelp.setEnabled(true);
             splitHelp.setEnabled(true);
-            setupUINewQuestion();
+            setupUINextQuestionTest();
         }
 
         @Override
         public void componentHidden(ComponentEvent e) {
-
         }
     }
 }

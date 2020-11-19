@@ -1,18 +1,18 @@
 package core.server;
 
 import core.highscore.HighScoreManager;
-import core.packets.AnswerFlag;
-import core.packets.ResponsePacket;
+import core.packets.*;
 import core.question.Question;
 import core.question.QuestionManager;
-import core.packets.QuestionPacket;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.EnumSet;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
 public class GameHandle implements Runnable {
     private Server serverRef;
@@ -24,9 +24,17 @@ public class GameHandle implements Runnable {
 
     private boolean running = true;
     private int qIndex = 0;
+    private boolean crowdHelp = true;
+    private boolean splitHelp = true;
+    private boolean swapQuestionHelp = true;
+
+    private Question currentQuestion;
+
 
     private ObjectOutputStream objectOutputStream;
     private ObjectInputStream objectInputStream;
+
+    MessageHandler messageHandler;
 
     public GameHandle(Server server, Socket s, QuestionManager questionManager, HighScoreManager scoreManager) {
         serverRef = server;
@@ -37,79 +45,96 @@ public class GameHandle implements Runnable {
         try {
             objectInputStream = new ObjectInputStream(s.getInputStream());
             objectOutputStream = new ObjectOutputStream(s.getOutputStream());
+            messageHandler = new MessageHandler(objectOutputStream, objectInputStream);
+            currentQuestion = qm.getQuestionByDifficulty(++qIndex);
+            messageHandler.sendMessage(new Message(MessageType.QUESTION, currentQuestion));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    /*@Override
-    public void run() {
-        Question question;
-        int index = 1;
-        while(playing) {
-            //question = questionManager.getQuestionByDifficulty(index++);
-            question = qm.getQuestionByDifficulty(index++);
-
-            QuestionPacket qp = new QuestionPacket(question.getQuestion(), question.getAnswers());
-
-            System.out.println(question.toString());
-
-            try {
-                objectOutputStream.writeObject(qp);
-                //objectOutputStream.writeObject(question);
-
-                int clientAnswer = (int)objectInputStream.readObject();
-                EnumSet<AnswerFlag> flag;
-                ResponsePacket responsePacket;
-                if(!((clientAnswer - 1) == question.getAnswerIndex())) {
-                    flag = EnumSet.of(AnswerFlag.WRONG);
-                    responsePacket = new ResponsePacket(flag);
-                    objectOutputStream.writeObject(responsePacket);
-                    cleanUp();
-                } else {
-                    flag = EnumSet.of(AnswerFlag.CORRECT);
-                    responsePacket = new ResponsePacket(flag);
-                    objectOutputStream.writeObject(responsePacket);
-                }
-            } catch (IOException | ClassNotFoundException e) {
-                //System.out.println(e.getMessage());
-                e.printStackTrace();
-                cleanUp();
-            }
-        }
-        System.out.println(clientSocket + " játéka véget ért.");
-
-    }*/
-
     @Override
     public void run() {
-        MessageType type;
         while(running) {
             try {
-                type = (MessageType)objectInputStream.readObject();
-                switch(type) {
-                    case SEND_SCORES:
-                        objectOutputStream.writeObject(sm.getHighScores());
+                Message msg = messageHandler.receiveMessage();
+                switch(msg.getMessageID()) {
+                    case ANSWER:
+                        int ansIdx = (int)msg.getData();
+                        if(ansIdx == currentQuestion.getAnswerIndex()) {
+                            currentQuestion = qm.getQuestionByDifficulty(++qIndex);
+                            messageHandler.sendMessage(new Message(MessageType.QUESTION, currentQuestion));
+                        } else {
+                            messageHandler.sendMessage(new Message(MessageType.ERROR, "Wrong answer!"));
+                            cleanUp();
+                        }
                         break;
-                    case SEND_QUESTION:
-                        objectOutputStream.writeObject(qm.getQuestionByDifficulty(qIndex));
+                    case SWAPQUESTIONHELP:
+                        if(swapQuestionHelp) {
+                            currentQuestion = qm.getQuestionByDifficulty(qIndex);
+                            messageHandler.sendMessage(new Message(MessageType.CONFIRM, currentQuestion));
+                        } else {
+                            messageHandler.sendMessage(new Message(MessageType.ERROR, "Already used"));
+                        }
                         break;
-                    case NEXT_QUESTION:
-                        objectOutputStream.writeObject(qm.getQuestionByDifficulty(++qIndex));
+                    case SPLITHELP:
+                        if(splitHelp) {
+                            splitHelp = false;
+                            messageHandler.sendMessage(new Message(MessageType.CONFIRM, currentQuestion.getAnswerIndex()));
+                        } else {
+                            messageHandler.sendMessage(new Message(MessageType.ERROR, "Already used!"));
+                        }
                         break;
-                    case GAMEOVER:
-                        qIndex = 0;
+                    case CROWDHELP:
+                        if(crowdHelp) {
+                            crowdHelp = false;
+                            List<Integer> votes = n_random(100, (int)msg.getData());
+                            int valIdx = votes.indexOf(Collections.max(votes));
+                            Random rnd = new Random();
+                            int swapIdx = rnd.nextInt(votes.size());
+                            while(swapIdx == valIdx) {
+                                swapIdx = rnd.nextInt(votes.size());
+                            }
+                            Collections.swap(votes, swapIdx, valIdx);
+                            messageHandler.sendMessage(new Message(MessageType.CONFIRM, votes));
+                        } else {
+                            messageHandler.sendMessage(new Message(MessageType.ERROR, "Already used!"));
+                        }
                         break;
                     case DISCONNECT:
                         cleanUp();
                         break;
                 }
-            } catch (IOException | ClassNotFoundException e) {
+            } catch(Exception e) {
                 e.printStackTrace();
             }
         }
+    }
 
-    } //Func end
+    public List<Integer> n_random(int targetSum, int numberOfDraws) {
+        Random r = new Random();
+        List<Integer> list = new ArrayList<>();
+
+        int sum = 0;
+        for(int i = 0; i < numberOfDraws; i++) {
+            int next = r.nextInt(targetSum) + 1;
+            list.add(next);
+            sum+=next;
+        }
+
+        double scale = 1d * targetSum / sum;
+        sum = 0;
+        for(int i = 0; i < numberOfDraws; i++) {
+            list.set(i, (int)(list.get(i) * scale));
+            sum+=list.get(i);
+        }
+
+        while(sum++ < targetSum) {
+            int i = r.nextInt(numberOfDraws);
+            list.set(i, list.get(i) + 1);
+        }
+        return list;
+    }
 
     private void cleanUp() {
         try {
