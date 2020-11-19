@@ -1,29 +1,21 @@
 package core.client;
 
-import core.highscore.HighScore;
-import core.packets.*;
+import core.message.*;
 import core.question.Question;
 import core.server.MessageType;
 import core.util.Pair;
-import jdk.swing.interop.SwingInterOpUtils;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.AbstractMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
 
 public class ClientGame {
     private Socket socket;
-    private Scanner scanner = new Scanner(System.in);
     private ObjectInputStream ois;
     private ObjectOutputStream oos;
-    private boolean playing;
-
-    MessageHandler messageHandler;
+    MessageManager messageManager;
     public Question question;
 
     public ClientGame() {
@@ -31,9 +23,8 @@ public class ClientGame {
             socket = new Socket("localhost", 58901);
             oos = new ObjectOutputStream(socket.getOutputStream());
             ois = new ObjectInputStream(socket.getInputStream());
-            messageHandler = new MessageHandler(oos, ois);
-            playing = true;
-            Message msg = messageHandler.receiveMessage();
+            messageManager = new MessageManager(oos, ois);
+            Message msg = messageManager.receiveMessage();
             question = (Question)msg.getData();
         } catch (IOException e) {
             System.out.println(e.getMessage());
@@ -53,8 +44,8 @@ public class ClientGame {
 
 
     public boolean testSendAnswer(int index) {
-        messageHandler.sendMessage(new Message(MessageType.ANSWER, index));
-        Message msg = messageHandler.receiveMessage();
+        messageManager.sendMessage(new Message(MessageType.ANSWER, index));
+        Message msg = messageManager.receiveMessage();
         if(msg.getMessageID() == MessageType.ERROR) {
             return false;
         } else {
@@ -64,8 +55,8 @@ public class ClientGame {
     }
 
     public List<Integer> testCrowdHelp(int currentlyActiveButtons) {
-        messageHandler.sendMessage(new Message(MessageType.CROWDHELP, currentlyActiveButtons));
-        Message msg = messageHandler.receiveMessage();
+        messageManager.sendMessage(new Message(MessageType.CROWDHELP, currentlyActiveButtons));
+        Message msg = messageManager.receiveMessage();
         if(msg.getMessageID() == MessageType.CONFIRM) {
             return (List<Integer>) msg.getData();
         }
@@ -75,8 +66,8 @@ public class ClientGame {
     }
 
     public Pair<Boolean, Integer> testSplitHelp() {
-        messageHandler.sendMessage(new Message(MessageType.SPLITHELP, null));
-        Message msg = messageHandler.receiveMessage();
+        messageManager.sendMessage(new Message(MessageType.SPLITHELP, null));
+        Message msg = messageManager.receiveMessage();
         if(msg.getMessageID() == MessageType.CONFIRM) {
             return new Pair<>(true, (int)msg.getData());
         } else {
@@ -85,8 +76,8 @@ public class ClientGame {
     }
 
     public boolean testSwapQuestionHelp() {
-        messageHandler.sendMessage(new Message(MessageType.SWAPQUESTIONHELP, null));
-        Message msg = messageHandler.receiveMessage();
+        messageManager.sendMessage(new Message(MessageType.SWAPQUESTIONHELP, null));
+        Message msg = messageManager.receiveMessage();
         if(msg.getMessageID() == MessageType.CONFIRM) {
             question = (Question)msg.getData();
             return true;
@@ -95,7 +86,7 @@ public class ClientGame {
     }
 
     public void testSendDisconnect() {
-        messageHandler.sendMessage(new Message(MessageType.DISCONNECT, null));
+        messageManager.sendMessage(new Message(MessageType.DISCONNECT, null));
         try {
             oos.close();
             ois.close();

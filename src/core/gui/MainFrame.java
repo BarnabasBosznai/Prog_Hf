@@ -4,7 +4,6 @@ import core.client.ClientGame;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.function.Predicate;
 
 public class MainFrame extends JFrame {
 

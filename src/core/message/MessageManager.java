@@ -1,13 +1,13 @@
-package core.packets;
+package core.message;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-public class MessageHandler {
+public class MessageManager {
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
 
-    public MessageHandler(ObjectOutputStream objectOutputStream, ObjectInputStream objectInputStream) {
+    public MessageManager(ObjectOutputStream objectOutputStream, ObjectInputStream objectInputStream) {
         oos = objectOutputStream;
         ois = objectInputStream;
     }

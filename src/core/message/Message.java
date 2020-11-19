@@ -1,4 +1,4 @@
-package core.packets;
+package core.message;
 
 import core.server.MessageType;
 

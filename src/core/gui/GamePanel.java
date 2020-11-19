@@ -23,13 +23,13 @@ public class GamePanel extends JPanel {
 
     public GamePanel(MainFrame frame) {
         crowdHelp = new JButton("<html>Közönség<br>szavazás</html>");
-        crowdHelp.setPreferredSize(new Dimension(120, 55));
+        crowdHelp.setPreferredSize(new Dimension(120, 60));
         crowdHelp.setFocusPainted(false);
         splitHelp = new JButton("Felezés");
-        splitHelp.setPreferredSize(new Dimension(120, 55));
+        splitHelp.setPreferredSize(new Dimension(120, 60));
         splitHelp.setFocusPainted(false);
         newQuestionHelp = new JButton("<html>Kérdés<br>csere</html>");
-        newQuestionHelp.setPreferredSize(new Dimension(120, 55));
+        newQuestionHelp.setPreferredSize(new Dimension(120, 60));
         newQuestionHelp.setFocusPainted(false);
         for(int i = 0; i < 4; i++) {
             ansButtons[i] = new JButton();
@@ -40,9 +40,9 @@ public class GamePanel extends JPanel {
                 groupLayout.createParallelGroup(Alignment.LEADING)
                         .addGroup(groupLayout.createSequentialGroup()
                                 .addContainerGap(110, Short.MAX_VALUE)
-                                .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                                .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
                                         .addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
-                                                .addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
+                                                .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING, false)
                                                         .addComponent(questionLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                                         .addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
                                                                 .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
@@ -68,11 +68,10 @@ public class GamePanel extends JPanel {
                 groupLayout.createParallelGroup(Alignment.TRAILING)
                         .addGroup(groupLayout.createSequentialGroup()
                                 .addContainerGap()
-                                .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                                .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
                                         .addComponent(crowdHelp, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
-                                        .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-                                                .addComponent(splitHelp, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
-                                                .addComponent(newQuestionHelp, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)))
+                                        .addComponent(splitHelp, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(newQuestionHelp, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE))
                                 .addGap(100)
                                 .addComponent(questionLabel, GroupLayout.PREFERRED_SIZE, 115, GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, 80, Short.MAX_VALUE)

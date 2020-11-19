@@ -1,7 +1,7 @@
 package core.server;
 
 import core.highscore.HighScoreManager;
-import core.packets.*;
+import core.message.*;
 import core.question.Question;
 import core.question.QuestionManager;
 
@@ -34,7 +34,7 @@ public class GameHandle implements Runnable {
     private ObjectOutputStream objectOutputStream;
     private ObjectInputStream objectInputStream;
 
-    MessageHandler messageHandler;
+    MessageManager messageManager;
 
     public GameHandle(Server server, Socket s, QuestionManager questionManager, HighScoreManager scoreManager) {
         serverRef = server;
@@ -45,9 +45,9 @@ public class GameHandle implements Runnable {
         try {
             objectInputStream = new ObjectInputStream(s.getInputStream());
             objectOutputStream = new ObjectOutputStream(s.getOutputStream());
-            messageHandler = new MessageHandler(objectOutputStream, objectInputStream);
+            messageManager = new MessageManager(objectOutputStream, objectInputStream);
             currentQuestion = qm.getQuestionByDifficulty(++qIndex);
-            messageHandler.sendMessage(new Message(MessageType.QUESTION, currentQuestion));
+            messageManager.sendMessage(new Message(MessageType.QUESTION, currentQuestion));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -57,32 +57,32 @@ public class GameHandle implements Runnable {
     public void run() {
         while(running) {
             try {
-                Message msg = messageHandler.receiveMessage();
+                Message msg = messageManager.receiveMessage();
                 switch(msg.getMessageID()) {
                     case ANSWER:
                         int ansIdx = (int)msg.getData();
                         if(ansIdx == currentQuestion.getAnswerIndex()) {
                             currentQuestion = qm.getQuestionByDifficulty(++qIndex);
-                            messageHandler.sendMessage(new Message(MessageType.QUESTION, currentQuestion));
+                            messageManager.sendMessage(new Message(MessageType.QUESTION, currentQuestion));
                         } else {
-                            messageHandler.sendMessage(new Message(MessageType.ERROR, "Wrong answer!"));
+                            messageManager.sendMessage(new Message(MessageType.ERROR, "Wrong answer!"));
                             cleanUp();
                         }
                         break;
                     case SWAPQUESTIONHELP:
                         if(swapQuestionHelp) {
                             currentQuestion = qm.getQuestionByDifficulty(qIndex);
-                            messageHandler.sendMessage(new Message(MessageType.CONFIRM, currentQuestion));
+                            messageManager.sendMessage(new Message(MessageType.CONFIRM, currentQuestion));
                         } else {
-                            messageHandler.sendMessage(new Message(MessageType.ERROR, "Already used"));
+                            messageManager.sendMessage(new Message(MessageType.ERROR, "Already used"));
                         }
                         break;
                     case SPLITHELP:
                         if(splitHelp) {
                             splitHelp = false;
-                            messageHandler.sendMessage(new Message(MessageType.CONFIRM, currentQuestion.getAnswerIndex()));
+                            messageManager.sendMessage(new Message(MessageType.CONFIRM, currentQuestion.getAnswerIndex()));
                         } else {
-                            messageHandler.sendMessage(new Message(MessageType.ERROR, "Already used!"));
+                            messageManager.sendMessage(new Message(MessageType.ERROR, "Already used!"));
                         }
                         break;
                     case CROWDHELP:
@@ -96,9 +96,9 @@ public class GameHandle implements Runnable {
                                 swapIdx = rnd.nextInt(votes.size());
                             }
                             Collections.swap(votes, swapIdx, valIdx);
-                            messageHandler.sendMessage(new Message(MessageType.CONFIRM, votes));
+                            messageManager.sendMessage(new Message(MessageType.CONFIRM, votes));
                         } else {
-                            messageHandler.sendMessage(new Message(MessageType.ERROR, "Already used!"));
+                            messageManager.sendMessage(new Message(MessageType.ERROR, "Already used!"));
                         }
                         break;
                     case DISCONNECT:
