@@ -8,19 +8,27 @@ import java.util.List;
 public class HighScoreManager {
     private List<HighScore> highScores;
     private static String highScoresFile = "highscores.txt";
+    private static HighScoreManager instance;
 
-    public HighScoreManager() {
+    public static HighScoreManager getInstance() {
+        if(instance == null) {
+            instance = new HighScoreManager();
+        }
+        return instance;
+    }
+
+    private HighScoreManager() {
         loadFile();
         if(highScores == null)
             highScores = new ArrayList<>();
     }
 
-    public void add(HighScore score) {
+    public synchronized void add(HighScore score) {
         highScores.add(score);
         Collections.sort(highScores);
     }
 
-    public List<HighScore> getHighScores() {
+    public synchronized List<HighScore> getHighScores() {
         return highScores;
     }
 

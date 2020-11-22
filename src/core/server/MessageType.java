@@ -1,5 +1,0 @@
-package core.server;
-
-public enum MessageType {
-    QUESTION, ANSWER, CROWDHELP, SPLITHELP, SWAPQUESTIONHELP, CONFIRM, ERROR, DISCONNECT
-}

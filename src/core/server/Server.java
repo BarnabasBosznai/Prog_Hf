@@ -1,13 +1,11 @@
 package core.server;
-
-import core.highscore.HighScore;
 import core.highscore.HighScoreManager;
 import core.question.QuestionManager;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -21,12 +19,19 @@ public class Server {
     private ServerSocket listener;
     private List<Socket> connections = new ArrayList<>();
 
-    private static QuestionManager questionManager = new QuestionManager("questions.json");
-    private static HighScoreManager highScoreManager = new HighScoreManager();
+    String[] prizes = { "0", "5.000", "10.000","25.000", "50.000", "100.000", "200.000", "300.000", "500.000", "800.000", "1.500.000", "3.000.000", "5.000.000", "10.000.000", "20.000.000", "40.000.000" };
 
-    public Server(int port) {
+    private QuestionManager questionManager = QuestionManager.getInstance("questions.json");
+    private HighScoreManager highScoreManager = HighScoreManager.getInstance();
+
+    public String getPrize(int index) {
+        return prizes[index];
+    }
+
+    public Server(String ip, int port) {
         try {
-            listener = new ServerSocket(port); // 58901
+            //listener = new ServerSocket(port, 0, InetAddress.getByName("192.168.1.2")); // 58901
+            listener = new ServerSocket(port, 0, InetAddress.getByName(ip)); // 58901
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -36,10 +41,11 @@ public class Server {
         System.out.println("Server starting...");
         Thread socketConnectionAsync = new Thread(() -> {
                     while(running) {
+                        Socket s;
                         try {
-                            Socket s = listener.accept();
+                            s = listener.accept();
                             connections.add(s);
-                            pool.execute(new GameHandle(this, s, questionManager, highScoreManager));
+                            pool.execute(new ClientHandle(this, s,  questionManager, highScoreManager));
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

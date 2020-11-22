@@ -1,18 +1,25 @@
 package core.gui;
 
+import core.highscore.HighScore;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class MainMenuPanel extends JPanel {
 
-    public MainMenuPanel(JFrame frame) {
+    public MainMenuPanel(String ip, int port, MainFrame frame) {
         JButton startGame = new JButton("Új Játék");
         startGame.setPreferredSize(new Dimension(60, 25));
         startGame.setFont(new Font("Tahoma", Font.PLAIN, 22));
         startGame.setFocusPainted(false);
         startGame.addActionListener((ActionListener) -> {
-            CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
-            cl.show(frame.getContentPane(), "GAME");
+            String name = (String)JOptionPane.showInputDialog(frame, "Enter your name!", "Enter name", JOptionPane.PLAIN_MESSAGE, null, null, "Anonymous");
+            GamePanel gamePanel = new GamePanel();
+            if(gamePanel.init(frame, ip, port, name)) {
+                frame.getContentPane().add(gamePanel, "GAME");
+                CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
+                cl.show(frame.getContentPane(), "GAME");
+            }
         });
 
         JButton highScores = new JButton("Dicsőséglista");
@@ -20,8 +27,12 @@ public class MainMenuPanel extends JPanel {
         highScores.setFont(new Font("Tahoma", Font.PLAIN, 22));
         highScores.setFocusPainted(false);
         highScores.addActionListener((ActionListener) -> {
-            CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
-            cl.show(frame.getContentPane(), "HIGHSCORES");
+            HighScorePanel highScorePanel = new HighScorePanel();
+            if(highScorePanel.init(frame, ip, port)) {
+                frame.getContentPane().add(highScorePanel, "HIGHSCORES");
+                CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
+                cl.show(frame.getContentPane(), "HIGHSCORES");
+            }
         });
 
         JButton exit = new JButton("Kilépés");
@@ -33,12 +44,14 @@ public class MainMenuPanel extends JPanel {
         JLabel title = new JLabel("Legyen Ön Is Milliomos");
         title.setHorizontalAlignment(SwingConstants.CENTER);
         title.setFont(new Font("Tahoma", Font.PLAIN, 36));
+        title.setPreferredSize(new Dimension(400, 45));
+        System.out.println(title.getPreferredSize());
         GroupLayout groupLayout = new GroupLayout(this);
         groupLayout.setHorizontalGroup(
                 groupLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
                         .addGroup(groupLayout.createSequentialGroup()
                                 .addGap(200)
-                                .addComponent(title, GroupLayout.PREFERRED_SIZE, 378, GroupLayout.PREFERRED_SIZE)
+                                .addComponent(title, GroupLayout.PREFERRED_SIZE, 375, GroupLayout.PREFERRED_SIZE)
                                 .addContainerGap(200, Short.MAX_VALUE))
                         .addGroup(GroupLayout.Alignment.TRAILING, groupLayout.createSequentialGroup()
                                 .addGap(285)

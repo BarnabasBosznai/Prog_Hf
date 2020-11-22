@@ -5,10 +5,10 @@ import java.time.LocalDate;
 
 public class HighScore implements Serializable, Comparable<HighScore> {
     private String playerName;
-    private int playerScore;
+    private String playerScore;
     private LocalDate gameDate;
 
-    public HighScore(String name, int score, LocalDate date) {
+    public HighScore(String name, String score, LocalDate date) {
         playerName = name;
         playerScore = score;
         gameDate = date;
@@ -18,7 +18,7 @@ public class HighScore implements Serializable, Comparable<HighScore> {
         return playerName;
     }
 
-    public int getPlayerScore() {
+    public String getPlayerScore() {
         return playerScore;
     }
 
@@ -28,6 +28,8 @@ public class HighScore implements Serializable, Comparable<HighScore> {
 
     @Override
     public int compareTo(HighScore o) {
-        return Integer.compare(o.playerScore, playerScore);
+        int oPlayer = Integer.parseInt((o.playerScore).replace(".", "").replace("Ft", ""));
+        int player = Integer.parseInt((playerScore).replace(".", "").replace("Ft", ""));
+        return Integer.compare(oPlayer, player);
     }
 }

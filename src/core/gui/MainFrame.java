@@ -9,7 +9,7 @@ public class MainFrame extends JFrame {
 
     private JPanel mainPanel;
     private ClientGame game;
-    public MainFrame() {
+    public MainFrame(String ip, int port) {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setTitle("Legyen Ön Is Milliomos");
         setResizable(false);
@@ -17,14 +17,8 @@ public class MainFrame extends JFrame {
         setContentPane(mainPanel);
         mainPanel.setLayout(new CardLayout());
 
-        MainMenuPanel menuPanel = new MainMenuPanel(this);
+        MainMenuPanel menuPanel = new MainMenuPanel(ip, port, this);
         mainPanel.add(menuPanel, "MENU");
-
-        HighScorePanel scorePanel = new HighScorePanel(this);
-        mainPanel.add(scorePanel, "HIGHSCORES");
-
-        GamePanel gamePanel = new GamePanel(this);
-        mainPanel.add(gamePanel, "GAME");
 
         pack();
         setVisible(true);

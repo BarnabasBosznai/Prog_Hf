@@ -9,8 +9,17 @@ import javax.json.*;
 
 public class QuestionManager {
     private List<Question> questionList = new ArrayList<>();
+    private static QuestionManager instance;
 
-    public QuestionManager(String filepath) {
+    public static QuestionManager getInstance(String filepath) {
+        if(instance == null) {
+            instance = new QuestionManager(filepath);
+        }
+
+        return instance;
+    }
+
+    private QuestionManager(String filepath) {
         try(JsonReader jsonReader = Json.createReader(new InputStreamReader(new FileInputStream(filepath), StandardCharsets.UTF_8)))
         {
             JsonObject jsonObject = jsonReader.readObject();

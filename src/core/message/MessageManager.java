@@ -26,7 +26,15 @@ public class MessageManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return null;
+    }
+
+    public void close() {
+        try {
+            oos.close();
+            ois.close();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 }

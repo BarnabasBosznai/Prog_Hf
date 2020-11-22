@@ -1,7 +1,5 @@
 package core.message;
 
-import core.server.MessageType;
-
 import java.io.*;
 import java.util.Base64;
 

@@ -6,7 +6,6 @@ import core.util.Pair;
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
 import java.awt.*;
-import java.awt.event.*;
 import java.util.List;
 import java.util.Random;
 import java.util.StringTokenizer;
@@ -21,7 +20,26 @@ public class GamePanel extends JPanel {
 
     private JButton[] ansButtons = new JButton[4];
 
-    public GamePanel(MainFrame frame) {
+    public boolean init(MainFrame frame, String ip, int port, String name) {
+        if(setupConnection(ip, port, name)) {
+            frame.setGame(game);
+            setupUI(frame);
+            return true;
+        } else {
+            JOptionPane.showMessageDialog(frame, "Nem sikerült csatlakozni a szerverhez. Próbáld később!", "Csatlakozási hiba", JOptionPane.WARNING_MESSAGE);
+            CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
+            cl.removeLayoutComponent(this);
+            cl.show(frame.getContentPane(), "MENU");
+            return false;
+        }
+    }
+
+    private boolean setupConnection(String ip, int port, String name) {
+        game = new ClientGame();
+        return game.init(ip, port, name);
+    }
+
+    private void setupUI(MainFrame frame) {
         crowdHelp = new JButton("<html>Közönség<br>szavazás</html>");
         crowdHelp.setPreferredSize(new Dimension(120, 60));
         crowdHelp.setFocusPainted(false);
@@ -35,6 +53,9 @@ public class GamePanel extends JPanel {
             ansButtons[i] = new JButton();
             ansButtons[i].setFocusPainted(false);
         }
+
+        setupUIForNextQuestionTest();
+
         GroupLayout groupLayout = new GroupLayout(this);
         groupLayout.setHorizontalGroup(
                 groupLayout.createParallelGroup(Alignment.LEADING)
@@ -61,8 +82,6 @@ public class GamePanel extends JPanel {
                                                 .addComponent(crowdHelp, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                                                 .addContainerGap())))
         );
-
-        questionLabel.setFont(new Font("Tahoma", Font.PLAIN, 16));
 
         groupLayout.setVerticalGroup(
                 groupLayout.createParallelGroup(Alignment.TRAILING)
@@ -95,36 +114,26 @@ public class GamePanel extends JPanel {
         }
 
         splitHelp.addActionListener((ActionListener) -> {
-            Pair<Boolean, Integer> pair = game.testSplitHelp();
-            if(pair.getFirst()) {
-                Random random = new Random();
-                int idx = pair.getSecond();
-                int count = 0;
-                while(count != 2) {
-                    int temp = random.nextInt(4);
-                    if(temp != idx && ansButtons[temp].isEnabled()) {
-                        ansButtons[temp].setEnabled(false);
-                        count++;
-                    }
+            boolean[] arr = game.testSplitHelp();
+            if(arr != null) {
+                for(int i = 0; i < 4; i++) {
+                    ansButtons[i].setEnabled(arr[i]);
                 }
                 splitHelp.setEnabled(false);
             }
         });
 
         crowdHelp.addActionListener((ActionListener) -> {
-            int count = 0;
+            boolean en[] = new boolean[4];
             for(int i = 0; i < 4; i++) {
-                if(ansButtons[i].isEnabled()) {
-                    count++;
-                }
+                en[i] = ansButtons[i].isEnabled();
             }
 
-            List<Integer> v = game.testCrowdHelp(count);
-            if(v != null) {
-                int idx = 0;
+            List<Integer> v2 = game.testCrowdHelpv2(en);
+            if(v2 != null) {
                 for(int i = 0; i < 4; i++) {
                     if(ansButtons[i].isEnabled()) {
-                        ansButtons[i].setText(ansButtons[i].getText() + " " + v.get(idx++) + "%");
+                        ansButtons[i].setText(ansButtons[i].getText() + " " + v2.get(i) + "%");
                     }
                 }
                 crowdHelp.setEnabled(false);
@@ -133,15 +142,15 @@ public class GamePanel extends JPanel {
 
         newQuestionHelp.addActionListener((ActionListener) -> {
             if(game.testSwapQuestionHelp()) {
-                setupUINextQuestionTest();
+                setupUIForNextQuestionTest();
             }
             newQuestionHelp.setEnabled(false);
         });
-        addComponentListener(new GamePanelComponentListener(frame));
     }
 
-    private void setupUINextQuestionTest() {
-        questionLabel.setText(wrapText(game.question.getQuestion()));
+
+    private void setupUIForNextQuestionTest() {
+        questionLabel.setText(game.question.getQuestion());
         String[] ans = game.question.getAnswers();
         for(int i = 0; i < 4; i++) {
             ansButtons[i].setText(((char)(65 + i)) + ") " + ans[i]);
@@ -150,12 +159,19 @@ public class GamePanel extends JPanel {
     }
 
     private void answerButtonFunc(MainFrame frame, int index) {
-        if(game.testSendAnswer(index)) {
-            setupUINextQuestionTest();
+        Pair<Boolean, String> pair = game.testSendAnswer(index);
+        if(pair.getFirst()) {
+            setupUIForNextQuestionTest();
         } else {
+            if(pair.getSecond() != null) {
+                JOptionPane.showMessageDialog(frame, "Rossz válasz! Nyereménye: " + pair.getSecond() + " Ft", "Vége a játéknak!", JOptionPane.PLAIN_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(frame, "Gratulálunk, megnyerte a főnyereményt: " + pair.getSecond() + " Ft", "Winner Winner Chicken Dinner", JOptionPane.PLAIN_MESSAGE);
+            }
             game.testSendDisconnect();
             frame.setGame(null);
             CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
+            cl.removeLayoutComponent(this);
             cl.show(frame.getContentPane(), "MENU");
         }
     }
@@ -201,42 +217,5 @@ public class GamePanel extends JPanel {
 
         //Return the string
         return returnString;
-    }
-
-    private void onConnect(MainFrame frame) {
-        game = new ClientGame();
-        frame.setGame(game);
-    }
-
-    private class GamePanelComponentListener implements ComponentListener {
-
-        private MainFrame frame;
-        public GamePanelComponentListener(MainFrame mainFrame) {
-            frame = mainFrame;
-        }
-
-        @Override
-        public void componentResized(ComponentEvent e) {
-
-        }
-
-        @Override
-        public void componentMoved(ComponentEvent e) {
-
-        }
-
-        @Override
-        public void componentShown(ComponentEvent e) {
-            System.out.println("ComponenetShown got called!");
-            onConnect(frame);
-            newQuestionHelp.setEnabled(true);
-            crowdHelp.setEnabled(true);
-            splitHelp.setEnabled(true);
-            setupUINextQuestionTest();
-        }
-
-        @Override
-        public void componentHidden(ComponentEvent e) {
-        }
     }
 }

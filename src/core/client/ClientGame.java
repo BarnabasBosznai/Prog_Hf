@@ -2,7 +2,7 @@ package core.client;
 
 import core.message.*;
 import core.question.Question;
-import core.server.MessageType;
+import core.message.MessageType;
 import core.util.Pair;
 
 import java.io.IOException;
@@ -13,49 +13,36 @@ import java.util.List;
 
 public class ClientGame {
     private Socket socket;
-    private ObjectInputStream ois;
-    private ObjectOutputStream oos;
-    MessageManager messageManager;
+    private MessageManager messageManager;
     public Question question;
 
-    public ClientGame() {
+    public boolean init(String ip, int port, String name) {
         try {
-            socket = new Socket("localhost", 58901);
-            oos = new ObjectOutputStream(socket.getOutputStream());
-            ois = new ObjectInputStream(socket.getInputStream());
-            messageManager = new MessageManager(oos, ois);
+            socket = new Socket(ip, port);
+            messageManager = new MessageManager(new ObjectOutputStream(socket.getOutputStream()), new ObjectInputStream(socket.getInputStream()));
+            messageManager.sendMessage(new Message(MessageType.NEW_GAME, name));
             Message msg = messageManager.receiveMessage();
             question = (Question)msg.getData();
+            return true;
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-            System.exit(1);
+            e.printStackTrace();
+            return false;
         }
     }
 
-    /*public List<HighScore> getScores() {
-        try {
-            oos.writeObject(MessageType.SEND_SCORES);
-            return (List<HighScore>)ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }*/
-
-
-    public boolean testSendAnswer(int index) {
+    public Pair<Boolean, String> testSendAnswer(int index) {
         messageManager.sendMessage(new Message(MessageType.ANSWER, index));
         Message msg = messageManager.receiveMessage();
-        if(msg.getMessageID() == MessageType.ERROR) {
-            return false;
-        } else {
+        if (msg.getMessageID() == MessageType.QUESTION) {
             question = (Question)msg.getData();
-            return true;
+            return new Pair<>(true, null);
+        } else {
+            return new Pair<>(false, (String)msg.getData());
         }
     }
 
-    public List<Integer> testCrowdHelp(int currentlyActiveButtons) {
-        messageManager.sendMessage(new Message(MessageType.CROWDHELP, currentlyActiveButtons));
+    public List<Integer> testCrowdHelpv2(boolean[] en) {
+        messageManager.sendMessage(new Message(MessageType.CROWDHELP, en));
         Message msg = messageManager.receiveMessage();
         if(msg.getMessageID() == MessageType.CONFIRM) {
             return (List<Integer>) msg.getData();
@@ -65,11 +52,11 @@ public class ClientGame {
         }
     }
 
-    public Pair<Boolean, Integer> testSplitHelp() {
+    public boolean[] testSplitHelp() {
         messageManager.sendMessage(new Message(MessageType.SPLITHELP, null));
         Message msg = messageManager.receiveMessage();
         if(msg.getMessageID() == MessageType.CONFIRM) {
-            return new Pair<>(true, (int)msg.getData());
+            return (boolean[])msg.getData();
         } else {
             return null;
         }
@@ -88,8 +75,7 @@ public class ClientGame {
     public void testSendDisconnect() {
         messageManager.sendMessage(new Message(MessageType.DISCONNECT, null));
         try {
-            oos.close();
-            ois.close();
+            messageManager.close();
             socket.close();
         } catch(Exception e) {
             e.printStackTrace();
