@@ -35,7 +35,6 @@ public class ClientGame {
             t.start();
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
             return false;
         }
     }
@@ -114,7 +113,7 @@ public class ClientGame {
         if(ids.contains(MessageType.CONFIRM) && ids.contains(MessageType.SWAPQUESTIONHELP)) {
             question = (Question)data;
             gamePanel.setupUIForNextQuestionTest();
-            gamePanel.getNewQuestionHelp().setEnabled(true);
+            gamePanel.getNewQuestionHelp().setEnabled(false);
         }
     }
 

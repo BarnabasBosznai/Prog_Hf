@@ -202,10 +202,6 @@ public class ClientHandle implements Runnable {
         return list;
     }
 
-    public void setRunning(boolean running) {
-        this.running = running;
-    }
-
     private void cleanUp() {
         try {
             running = false;
