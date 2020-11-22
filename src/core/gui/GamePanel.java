@@ -5,7 +5,6 @@ import core.client.ClientGame;
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
 import java.awt.*;
-import java.util.StringTokenizer;
 
 public class GamePanel extends JPanel {
     private JLabel questionLabel = new JLabel("questionPlaceholder");
@@ -37,13 +36,13 @@ public class GamePanel extends JPanel {
     }
 
     private void setupUI(MainFrame frame) {
-        crowdHelp = new JButton("<html>Közönség<br>szavazás</html>");
+        crowdHelp = new JButton("Szavazás");
         crowdHelp.setPreferredSize(new Dimension(120, 60));
         crowdHelp.setFocusPainted(false);
         splitHelp = new JButton("Felezés");
         splitHelp.setPreferredSize(new Dimension(120, 60));
         splitHelp.setFocusPainted(false);
-        newQuestionHelp = new JButton("<html>Kérdés<br>csere</html>");
+        newQuestionHelp = new JButton("Kérdés csere");
         newQuestionHelp.setPreferredSize(new Dimension(120, 60));
         newQuestionHelp.setFocusPainted(false);
         for(int i = 0; i < 4; i++) {
@@ -105,7 +104,7 @@ public class GamePanel extends JPanel {
         for(int i = 0; i < 4; i++) {
             int finalI = i;
             ansButtons[i].addActionListener((ActionListener) -> {
-                answerButtonFunc(frame, finalI);
+                answerButtonFunc(finalI);
             });
         }
 
@@ -136,7 +135,7 @@ public class GamePanel extends JPanel {
         }
     }
 
-    private void answerButtonFunc(MainFrame frame, int index) {
+    private void answerButtonFunc(int index) {
         game.sendAnswer(index);
     }
 
@@ -154,48 +153,5 @@ public class GamePanel extends JPanel {
 
     public JButton[] getAnsButtons() {
         return ansButtons;
-    }
-
-    // ???
-    private String wrapText(String string){
-        //Return string initialized with opening html tag
-        String returnString="<html>";
-
-        //Get max width of text line
-        int maxLineWidth = questionLabel.getWidth();
-
-        //Create font metrics
-        FontMetrics metrics = getFontMetrics(new Font("Tahoma", Font.PLAIN, 16));
-        //Current line width
-        int lineWidth = 0;
-
-        //Iterate over string
-        StringTokenizer tokenizer = new StringTokenizer(string," ");
-        while (tokenizer.hasMoreElements()) {
-            String word = (String) tokenizer.nextElement();
-            int stringWidth = metrics.stringWidth(word);
-
-            //If word will cause a spill over max line width
-            if (stringWidth+lineWidth>=maxLineWidth) {
-
-                //Add a new line, add a break tag and add the new word
-                returnString=(returnString+"<br>"+word);
-
-                //Reset line width
-                lineWidth=0;
-            } else {
-
-                //No spill, so just add to current string
-                returnString=(returnString + " " + word);
-            }
-            //Increase the width of the line
-            lineWidth += stringWidth;
-        }
-
-        //Close html tag
-        returnString = (returnString + "<html>");
-
-        //Return the string
-        return returnString;
     }
 }

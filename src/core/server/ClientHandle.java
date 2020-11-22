@@ -144,7 +144,12 @@ public class ClientHandle implements Runnable {
     }
 
     private void disconnectResponse() {
+        messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.DISCONNECT), null));
         cleanUp();
+    }
+
+    public MessageManager getMessageManager() {
+        return messageManager;
     }
 
     @Override
@@ -163,25 +168,9 @@ public class ClientHandle implements Runnable {
                     crowdHelpResponse(msg);
                 } else if(ids.contains(MessageType.DISCONNECT)) {
                     disconnectResponse();
+                } else if(ids.contains(MessageType.SERVER_LOST)) {
+                    cleanUp();
                 }
-
-                /*switch(msg.getMessageID()) {
-                    case ANSWER:
-                        answerResponse(msg);
-                        break;
-                    case SWAPQUESTIONHELP:
-                        swapQuestionHelpResponse();
-                        break;
-                    case SPLITHELP:
-                        splitHelpResponse();
-                        break;
-                    case CROWDHELP:
-                        crowdHelpResponse(msg);
-                        break;
-                    case DISCONNECT:
-                        disconnectResponse();
-                        break;
-                }*/
             } catch(Exception e) {
                 e.printStackTrace();
             }
@@ -211,6 +200,10 @@ public class ClientHandle implements Runnable {
             list.set(i, list.get(i) + 1);
         }
         return list;
+    }
+
+    public void setRunning(boolean running) {
+        this.running = running;
     }
 
     private void cleanUp() {

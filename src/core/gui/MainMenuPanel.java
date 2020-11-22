@@ -1,7 +1,5 @@
 package core.gui;
 
-import core.highscore.HighScore;
-
 import javax.swing.*;
 import java.awt.*;
 

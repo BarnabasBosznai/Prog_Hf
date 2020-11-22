@@ -118,15 +118,31 @@ public class ClientGame {
         }
     }
 
+    private void disconnectReceived(EnumSet<MessageType> ids, Object data) {
+        if(ids.contains(MessageType.CONFIRM) && ids.contains(MessageType.DISCONNECT)) {
+            messageManager.close();
+            try {
+                socket.close();
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        } else if(ids.contains(MessageType.ERROR) && ids.contains(MessageType.SERVER_LOST)) {
+            messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.SERVER_LOST), null));
+            messageManager.close();
+            try {
+                socket.close();
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+            MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(gamePanel);
+            JOptionPane.showMessageDialog(frame, "Megszakadt a kapcsolat a szerverrel!", "Kapcsolat hiba", JOptionPane.ERROR_MESSAGE);
+            CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
+            cl.show(frame.getContentPane(), "MENU");
+        }
+    }
+
     public void testSendDisconnect() {
         messageManager.sendMessage(new Message(EnumSet.of(MessageType.DISCONNECT), null));
-        try {
-            run = false;
-            messageManager.close();
-            socket.close();
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public void processMessage() {
@@ -142,6 +158,9 @@ public class ClientGame {
                     crowdHelpReceived(ids, msg.getData());
                 } else if(ids.contains(MessageType.SPLITHELP)) {
                     splitHelpReceived(ids, msg.getData());
+                } else if(ids.contains(MessageType.DISCONNECT) || ids.contains(MessageType.SERVER_LOST)) {
+                    disconnectReceived(ids, msg.getData());
+                    run = false;
                 }
             }
         }
