@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.EnumSet;
 import java.util.List;
 
 public class ClientScoreboard {
@@ -16,9 +17,9 @@ public class ClientScoreboard {
         try {
             Socket socket = new Socket(ip, port);
             MessageManager messageManager = new MessageManager(new ObjectOutputStream(socket.getOutputStream()), new ObjectInputStream(socket.getInputStream()));
-            messageManager.sendMessage(new Message(MessageType.SCOREBOARD, null));
+            messageManager.sendMessage(new Message(EnumSet.of(MessageType.SCOREBOARD), null));
             Message msg = messageManager.receiveMessage();
-            messageManager.sendMessage(new Message(MessageType.DISCONNECT, null));
+            messageManager.sendMessage(new Message(EnumSet.of(MessageType.DISCONNECT), null));
             return (List<HighScore>)msg.getData();
         } catch (IOException e) {
             return null;

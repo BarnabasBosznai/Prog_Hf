@@ -2,19 +2,20 @@ package core.message;
 
 import java.io.*;
 import java.util.Base64;
+import java.util.EnumSet;
 
 public class Message implements Serializable {
-    public Message(MessageType id, Object obj) {
-        messageID = id;
+    public Message(EnumSet<MessageType> ids, Object obj) {
+        messageIDs = ids;
         data = Base64.getEncoder().encodeToString(serialize(obj));
     }
 
-    private MessageType messageID;
+    private EnumSet<MessageType> messageIDs;
     private String data;
 
 
-    public MessageType getMessageID() {
-        return messageID;
+    public EnumSet<MessageType> getMessageID() {
+        return messageIDs;
     }
 
     public Object getData() {
