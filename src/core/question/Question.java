@@ -41,6 +41,7 @@ public class Question implements Serializable {
         return category;
     }
 
+    @Override
     public String toString() {
         return "Question: " + question + "\n Answers: " + answers[0] + " " + answers[1] + " " + answers[2] + " " + answers[3] + "\n Correct answers: " + answers[answerIndex] +
                 "\n Category: " + category + "\n Difficulty: " + difficulty;

@@ -17,10 +17,9 @@ import java.util.List;
 public class ClientGame {
     private Socket socket;
     private MessageManager messageManager;
-    private Thread t;
     public Question question;
     private GamePanel gamePanel;
-    private boolean run;
+    private boolean running;
 
     public boolean init(String ip, int port, GamePanel gp, String name) {
         try {
@@ -30,9 +29,8 @@ public class ClientGame {
             Message msg = messageManager.receiveMessage();
             question = (Question)msg.getData();
             gamePanel = gp;
-            run = true;
-            t = new Thread(this::processMessage);
-            t.start();
+            running = true;
+            new Thread(this::processMessage).start();
             return true;
         } catch (IOException e) {
             return false;
@@ -62,8 +60,8 @@ public class ClientGame {
         } else if(ids.contains(MessageType.CONFIRM) && ids.contains(MessageType.WON)) {
             MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(gamePanel);
             JOptionPane.showMessageDialog(frame, "Gratulálunk, megnyerte a főnyereményt: " + data + " Ft", "Winner Winner Chicken Dinner", JOptionPane.PLAIN_MESSAGE);
-            testSendDisconnect();
-            run = false;
+            sendDisconnect();
+            running = false;
             frame.setGame(null);
             CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
             cl.removeLayoutComponent(gamePanel);
@@ -71,8 +69,8 @@ public class ClientGame {
         } else {
             MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(gamePanel);
             JOptionPane.showMessageDialog(frame, "Rossz válasz! Nyereménye: " + data + " Ft", "Vége a játéknak!", JOptionPane.PLAIN_MESSAGE);
-            testSendDisconnect();
-            run = false;
+            sendDisconnect();
+            running = false;
             frame.setGame(null);
             CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
             cl.removeLayoutComponent(gamePanel);
@@ -125,8 +123,8 @@ public class ClientGame {
             } catch(Exception e) {
                 e.printStackTrace();
             }
-        } else if(ids.contains(MessageType.ERROR) && ids.contains(MessageType.SERVER_LOST)) {
-            messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.SERVER_LOST), null));
+        } else if(ids.contains(MessageType.ERROR) && ids.contains(MessageType.SERVERLOST)) {
+            messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.SERVERLOST), null));
             messageManager.close();
             try {
                 socket.close();
@@ -140,12 +138,12 @@ public class ClientGame {
         }
     }
 
-    public void testSendDisconnect() {
+    public void sendDisconnect() {
         messageManager.sendMessage(new Message(EnumSet.of(MessageType.DISCONNECT), null));
     }
 
     public void processMessage() {
-        while(run) {
+        while(running) {
             Message msg = messageManager.receiveMessage();
             EnumSet<MessageType> ids = msg.getMessageID();
             if(ids.contains(MessageType.CONFIRM) ||  ids.contains(MessageType.ERROR)) {
@@ -157,9 +155,9 @@ public class ClientGame {
                     crowdHelpReceived(ids, msg.getData());
                 } else if(ids.contains(MessageType.SPLITHELP)) {
                     splitHelpReceived(ids, msg.getData());
-                } else if(ids.contains(MessageType.DISCONNECT) || ids.contains(MessageType.SERVER_LOST)) {
+                } else if(ids.contains(MessageType.DISCONNECT) || ids.contains(MessageType.SERVERLOST)) {
                     disconnectReceived(ids, msg.getData());
-                    run = false;
+                    running = false;
                 }
             }
         }

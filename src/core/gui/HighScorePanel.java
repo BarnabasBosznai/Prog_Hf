@@ -20,7 +20,6 @@ public class HighScorePanel extends JPanel {
             model.setModelData(list);
             return true;
         } else {
-            JOptionPane.showMessageDialog(frame, "Nem sikerült csatlakozni a szerverhez! Próbáld később!", "Csatlakozási hiba", JOptionPane.ERROR_MESSAGE);
             return false;
         }
     }

@@ -7,25 +7,20 @@ import javax.swing.GroupLayout.Alignment;
 import java.awt.*;
 
 public class GamePanel extends JPanel {
-    private JLabel questionLabel = new JLabel("questionPlaceholder");
+    private JLabel questionLabel = new JLabel();
     private JButton crowdHelp;
     private JButton splitHelp;
     private JButton newQuestionHelp;
+    private JButton[] ansButtons = new JButton[4];
 
     private ClientGame game;
-
-    private JButton[] ansButtons = new JButton[4];
 
     public boolean init(MainFrame frame, String ip, int port, String name) {
         if(setupConnection(ip, port, name)) {
             frame.setGame(game);
-            setupUI(frame);
+            setupUI();
             return true;
         } else {
-            JOptionPane.showMessageDialog(frame, "Nem sikerült csatlakozni a szerverhez. Próbáld később!", "Csatlakozási hiba", JOptionPane.WARNING_MESSAGE);
-            CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
-            cl.removeLayoutComponent(this);
-            cl.show(frame.getContentPane(), "MENU");
             return false;
         }
     }
@@ -35,7 +30,7 @@ public class GamePanel extends JPanel {
         return game.init(ip, port, this,  name);
     }
 
-    private void setupUI(MainFrame frame) {
+    private void setupUI() {
         crowdHelp = new JButton("Szavazás");
         crowdHelp.setPreferredSize(new Dimension(120, 60));
         crowdHelp.setFocusPainted(false);
@@ -104,7 +99,7 @@ public class GamePanel extends JPanel {
         for(int i = 0; i < 4; i++) {
             int finalI = i;
             ansButtons[i].addActionListener((ActionListener) -> {
-                answerButtonFunc(finalI);
+                game.sendAnswer(finalI);
             });
         }
 
@@ -133,10 +128,6 @@ public class GamePanel extends JPanel {
             ansButtons[i].setText(((char)(65 + i)) + ") " + ans[i]);
             ansButtons[i].setEnabled(true);
         }
-    }
-
-    private void answerButtonFunc(int index) {
-        game.sendAnswer(index);
     }
 
     public JButton getCrowdHelp() {

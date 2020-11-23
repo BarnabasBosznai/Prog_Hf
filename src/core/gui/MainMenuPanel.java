@@ -17,6 +17,8 @@ public class MainMenuPanel extends JPanel {
                 frame.getContentPane().add(gamePanel, "GAME");
                 CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
                 cl.show(frame.getContentPane(), "GAME");
+            } else {
+                JOptionPane.showMessageDialog(frame, "Nem sikerült csatlakozni a szerverhez. Próbáld később!", "Csatlakozási hiba", JOptionPane.WARNING_MESSAGE);
             }
         });
 
@@ -30,6 +32,8 @@ public class MainMenuPanel extends JPanel {
                 frame.getContentPane().add(highScorePanel, "HIGHSCORES");
                 CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
                 cl.show(frame.getContentPane(), "HIGHSCORES");
+            } else {
+                JOptionPane.showMessageDialog(frame, "Nem sikerült csatlakozni a szerverhez! Próbáld később!", "Csatlakozási hiba", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -39,7 +43,7 @@ public class MainMenuPanel extends JPanel {
         exit.setFocusPainted(false);
         exit.addActionListener((ActionListener) -> frame.dispose());
 
-        JLabel title = new JLabel("Legyen Ön Is Milliomos");
+        JLabel title = new JLabel("Legyen Ön Is Milliomos!");
         title.setHorizontalAlignment(SwingConstants.CENTER);
         title.setFont(new Font("Tahoma", Font.PLAIN, 36));
         title.setPreferredSize(new Dimension(400, 45));

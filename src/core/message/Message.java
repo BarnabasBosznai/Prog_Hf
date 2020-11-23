@@ -5,14 +5,14 @@ import java.util.Base64;
 import java.util.EnumSet;
 
 public class Message implements Serializable {
-    public Message(EnumSet<MessageType> ids, Object obj) {
-        messageIDs = ids;
-        data = Base64.getEncoder().encodeToString(serialize(obj));
-    }
 
     private EnumSet<MessageType> messageIDs;
     private String data;
 
+    public Message(EnumSet<MessageType> ids, Object obj) {
+        messageIDs = ids;
+        data = Base64.getEncoder().encodeToString(serialize(obj));
+    }
 
     public EnumSet<MessageType> getMessageID() {
         return messageIDs;

@@ -17,11 +17,11 @@ public class ClientHandle implements Runnable {
     private Server serverRef;
     private Socket clientSocket;
 
-    private QuestionManager qm;
-    private HighScoreManager sm;
+    private QuestionManager questionManager;
+    private HighScoreManager highScoreManager;
 
     private boolean running = true;
-    private int qIndex = 0;
+    private int questionIndex = 0;
     private boolean crowdHelp = true;
     private boolean splitHelp = true;
     private boolean swapQuestionHelp = true;
@@ -31,11 +31,14 @@ public class ClientHandle implements Runnable {
 
     private MessageManager messageManager;
 
+    String[] prizes = { "0", "5.000", "10.000","25.000", "50.000", "100.000", "200.000", "300.000", "500.000", "800.000",
+                        "1.500.000", "3.000.000", "5.000.000", "10.000.000", "20.000.000", "40.000.000" };
+
     public ClientHandle(Server server, Socket s, QuestionManager questionManager, HighScoreManager scoreManager) {
         serverRef = server;
         clientSocket = s;
-        qm = questionManager;
-        sm = scoreManager;
+        this.questionManager = questionManager;
+        highScoreManager = scoreManager;
 
         try {
             messageManager = new MessageManager(new ObjectOutputStream(s.getOutputStream()),  new ObjectInputStream(s.getInputStream()));
@@ -46,9 +49,9 @@ public class ClientHandle implements Runnable {
         Message msg = messageManager.receiveMessage();
         EnumSet<MessageType> ids = msg.getMessageID();
         if(ids.contains(MessageType.SCOREBOARD)) {
-            messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.SCOREBOARD), sm.getHighScores()));
+            messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.SCOREBOARD), highScoreManager.getHighScores()));
         } else {
-            currentQuestion = qm.getQuestionByDifficulty(++qIndex);
+            currentQuestion = this.questionManager.getQuestionByDifficulty(++questionIndex);
             messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.QUESTION), currentQuestion));
             name = (String)msg.getData();
         }
@@ -57,27 +60,27 @@ public class ClientHandle implements Runnable {
     private void answerResponse(Message msg) {
         int ansIdx = (int)msg.getData();
         if(ansIdx == currentQuestion.getAnswerIndex()) {
-            qIndex++;
-            if(qIndex < 16) {
-                currentQuestion = qm.getQuestionByDifficulty(qIndex);
+            questionIndex++;
+            if(questionIndex < 16) {
+                currentQuestion = questionManager.getQuestionByDifficulty(questionIndex);
                 messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.QUESTION), currentQuestion));
             } else {
-                messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.WON), serverRef.getPrize(qIndex - 1)));
-                sm.add(new HighScore(name, serverRef.getPrize(qIndex - 1), LocalDate.now()));
+                messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.WON), prizes[questionIndex - 1]));
+                highScoreManager.add(new HighScore(name, prizes[questionIndex - 1], LocalDate.now()));
                 cleanUp();
             }
         } else {
-            if(qIndex - 1 != 0) {
-                sm.add(new HighScore(name, serverRef.getPrize(qIndex - 1), LocalDate.now()));
+            if(questionIndex - 1 != 0) {
+                highScoreManager.add(new HighScore(name, prizes[questionIndex - 1], LocalDate.now()));
             }
-            messageManager.sendMessage(new Message(EnumSet.of(MessageType.ERROR, MessageType.ANSWER), serverRef.getPrize(qIndex - 1)));
+            messageManager.sendMessage(new Message(EnumSet.of(MessageType.ERROR, MessageType.ANSWER), prizes[questionIndex - 1]));
             cleanUp();
         }
     }
 
     private void swapQuestionHelpResponse() {
         if(swapQuestionHelp) {
-            currentQuestion = qm.getQuestionByDifficulty(qIndex);
+            currentQuestion = questionManager.getQuestionByDifficulty(questionIndex);
             messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.SWAPQUESTIONHELP), currentQuestion));
         } else {
             messageManager.sendMessage(new Message(EnumSet.of(MessageType.ERROR, MessageType.SWAPQUESTIONHELP), "Already used"));
@@ -87,7 +90,7 @@ public class ClientHandle implements Runnable {
     private void splitHelpResponse() {
         if(splitHelp) {
             splitHelp = false;
-            boolean arr[] = new boolean[4];
+            boolean[] arr = new boolean[4];
             for(int i = 0; i < 4; i++) {
                 arr[i] = true;
             }
@@ -168,7 +171,7 @@ public class ClientHandle implements Runnable {
                     crowdHelpResponse(msg);
                 } else if(ids.contains(MessageType.DISCONNECT)) {
                     disconnectResponse();
-                } else if(ids.contains(MessageType.SERVER_LOST)) {
+                } else if(ids.contains(MessageType.SERVERLOST)) {
                     cleanUp();
                 }
             } catch(Exception e) {

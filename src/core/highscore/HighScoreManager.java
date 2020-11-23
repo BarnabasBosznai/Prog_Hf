@@ -7,20 +7,19 @@ import java.util.List;
 
 public class HighScoreManager {
     private List<HighScore> highScores;
-    private static String highScoresFile = "highscores.txt";
+    private String highScoresFile;
     private static HighScoreManager instance;
 
-    public static HighScoreManager getInstance() {
+    public static HighScoreManager getInstance(String file) {
         if(instance == null) {
-            instance = new HighScoreManager();
+            instance = new HighScoreManager(file);
         }
         return instance;
     }
 
-    private HighScoreManager() {
-        loadFile();
-        if(highScores == null)
-            highScores = new ArrayList<>();
+    private HighScoreManager(String file) {
+        highScoresFile = file;
+        loadFile(file);
     }
 
     public synchronized void add(HighScore score) {
@@ -32,41 +31,19 @@ public class HighScoreManager {
         return highScores;
     }
 
-    private void loadFile() {
-        ObjectInputStream objectInputStream = null;
-        try {
-            objectInputStream = new ObjectInputStream(new FileInputStream(highScoresFile));
-            highScores = (ArrayList<HighScore>)objectInputStream.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        } finally {
-            if(objectInputStream != null) {
-                try {
-                    objectInputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+    private void loadFile(String file) {
+        try(ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+            highScores = (ArrayList<HighScore>)ois.readObject();
+        } catch(Exception e) {
+            highScores = new ArrayList<>();
         }
     }
 
     public void close() {
-        ObjectOutputStream objectOutputStream = null;
-        try {
-            objectOutputStream = new ObjectOutputStream(new FileOutputStream(highScoresFile));
-            objectOutputStream.writeObject(highScores);
-        } catch (IOException e) {
+        try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(highScoresFile))) {
+            oos.writeObject(highScores);
+        } catch(Exception e) {
             System.out.println(e.getMessage());
-            e.printStackTrace();
-        } finally {
-            if(objectOutputStream != null) {
-                try {
-                    objectOutputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 }

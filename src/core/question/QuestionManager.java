@@ -54,14 +54,4 @@ public class QuestionManager {
         }
         return avail.get(new Random().nextInt(avail.size()));
     }
-
-    public synchronized Question getQuestionByCategory(String cat) {
-        List<Question> avail = new ArrayList<>();
-        for(Question q : questionList) {
-            if (q.getCategory().equals(cat)) {
-                avail.add(q);
-            }
-        }
-        return avail.get(new Random().nextInt(avail.size()));
-    }
 }
