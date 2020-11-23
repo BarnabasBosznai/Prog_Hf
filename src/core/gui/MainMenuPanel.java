@@ -45,7 +45,7 @@ public class MainMenuPanel extends JPanel {
 
         JLabel title = new JLabel("Legyen Ön Is Milliomos!");
         title.setHorizontalAlignment(SwingConstants.CENTER);
-        title.setFont(new Font("Tahoma", Font.PLAIN, 36));
+        title.setFont(new Font("Tahoma", Font.PLAIN, 35));
         title.setPreferredSize(new Dimension(400, 45));
         System.out.println(title.getPreferredSize());
         GroupLayout groupLayout = new GroupLayout(this);
