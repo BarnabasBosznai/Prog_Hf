@@ -7,7 +7,9 @@ import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
 
 import java.awt.*;
-import java.util.EnumSet;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.List;
 
 public class GamePanel extends JPanel {
@@ -48,76 +50,31 @@ public class GamePanel extends JPanel {
             case WON:
                 frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
                 JOptionPane.showMessageDialog(frame, "Gratulálunk, megnyerte a főnyereményt: " + data, "Winner Winner Chicken Dinner", JOptionPane.PLAIN_MESSAGE);
-                frame.setGame(null);
                 cl = (CardLayout)frame.getContentPane().getLayout();
                 cl.removeLayoutComponent(this);
                 cl.show(frame.getContentPane(), "MENU");
                 break;
             case WRONG_ANSWER:
                 frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
-                JOptionPane.showMessageDialog(frame, "Rossz válasz! Nyereménye:" + data + " Ft", "Vége a játéknak!", JOptionPane.PLAIN_MESSAGE);
-                frame.setGame(null);
+                JOptionPane.showMessageDialog(frame, "Rossz válasz! Nyereménye: " + data + " Ft", "Vége a játéknak!", JOptionPane.PLAIN_MESSAGE);
                 cl = (CardLayout)frame.getContentPane().getLayout();
                 cl.removeLayoutComponent(this);
                 cl.show(frame.getContentPane(), "MENU");
                 break;
             case DISCONNECT:
                 frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
-                frame.setGame(null);
                 JOptionPane.showMessageDialog(frame, "Megszakadt a kapcsolat a szerverrel!", "Kapcsolat hiba", JOptionPane.ERROR_MESSAGE);
                 cl = (CardLayout)frame.getContentPane().getLayout();
+                cl.removeLayoutComponent(this);
                 cl.show(frame.getContentPane(), "MENU");
                 break;
         }
-        /*if(ids.contains(MessageType.CONFIRM)) {
-            if(ids.contains(MessageType.ANSWER)) {
-                setupUIForNextQuestionTest();
-            } else if(ids.contains(MessageType.CROWDHELP)) {
-                crowdHelp.setEnabled(false);
-                List<Integer> list = (List<Integer>)data;
-                for(int i = 0; i < 4; i++) {
-                    if(ansButtons[i].isEnabled()) {
-                        ansButtons[i].setText(ansButtons[i].getText() + " " + list.get(i) + "%");
-                    }
-                }
-            } else if(ids.contains(MessageType.SPLITHELP)) {
-                splitHelp.setEnabled(false);
-                boolean[] val = (boolean[])data;
-                for(int i = 0; i < 4; i++) {
-                    ansButtons[i].setEnabled(val[i]);
-                }
-            } else if(ids.contains(MessageType.SWAPQUESTIONHELP)) {
-                newQuestionHelp.setEnabled(false);
-                setupUIForNextQuestionTest();
-            } else if(ids.contains(MessageType.WON)) {
-                MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
-                JOptionPane.showMessageDialog(frame, "Gratulálunk, megnyerte a főnyereményt: " + data, "Winner Winner Chicken Dinner", JOptionPane.PLAIN_MESSAGE);
-                frame.setGame(null);
-                CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
-                cl.removeLayoutComponent(this);
-                cl.show(frame.getContentPane(), "MENU");
-            }
-        } else if(ids.contains(MessageType.ERROR)) {
-            if(ids.contains(MessageType.ANSWER)) {
-                MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
-                JOptionPane.showMessageDialog(frame, "Rossz válasz! Nyereménye:" + data + " Ft", "Vége a játéknak!", JOptionPane.PLAIN_MESSAGE);
-                frame.setGame(null);
-                CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
-                cl.removeLayoutComponent(this);
-                cl.show(frame.getContentPane(), "MENU");
-            } else if(ids.contains(MessageType.DISCONNECT)) {
-                MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
-                frame.setGame(null);
-                JOptionPane.showMessageDialog(frame, "Megszakadt a kapcsolat a szerverrel!", "Kapcsolat hiba", JOptionPane.ERROR_MESSAGE);
-                CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
-                cl.show(frame.getContentPane(), "MENU");
-            }
-        }*/
     }
 
     public boolean init(MainFrame frame, String ip, int port, String name) {
         if(setupConnection(ip, port, name)) {
-            frame.setGame(game);
+            frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+            frame.addWindowListener(new CustomWindowListener(this));
             setupUI();
             return true;
         } else {
@@ -220,13 +177,36 @@ public class GamePanel extends JPanel {
         });
     }
 
-
     private void setupUIForNextQuestionTest() {
         questionLabel.setText(game.question.getQuestion());
         String[] ans = game.question.getAnswers();
         for(int i = 0; i < 4; i++) {
             ansButtons[i].setText(((char)(65 + i)) + ") " + ans[i]);
             ansButtons[i].setEnabled(true);
+        }
+    }
+
+    private class CustomWindowListener extends WindowAdapter {
+
+        private GamePanel gamePanel;
+
+        public CustomWindowListener(GamePanel panel) {
+            gamePanel = panel;
+        }
+
+        @Override
+        public void windowClosing(WindowEvent e) {
+            Object[] options = {"Igen", "Mégse"};
+            MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(gamePanel);
+            for(WindowListener lis : frame.getWindowListeners()) {
+                System.out.println(lis.toString());
+            }
+            int res = JOptionPane.showOptionDialog(frame, "Biztos kiakar lépni?", "Kilépés", JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,null ,options, options[0]);
+            if(res == JOptionPane.YES_OPTION) {
+                game.sendDisconnect();
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                super.windowClosed(e);
+            }
         }
     }
 }

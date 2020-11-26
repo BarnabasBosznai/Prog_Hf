@@ -74,7 +74,7 @@ public class Server {
         if(!pool.isTerminated()) {
             try {
                 //pool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
-                pool.awaitTermination(5000, TimeUnit.MILLISECONDS);
+                pool.awaitTermination(60000, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

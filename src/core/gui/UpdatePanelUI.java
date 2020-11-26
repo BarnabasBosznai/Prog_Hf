@@ -1,8 +1,6 @@
-package core.client;
+package core.gui;
 
 import core.message.MessageType;
-
-import java.util.EnumSet;
 
 public interface UpdatePanelUI {
     void update(MessageType id, Object data);

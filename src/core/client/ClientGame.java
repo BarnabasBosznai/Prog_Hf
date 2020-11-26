@@ -1,5 +1,6 @@
 package core.client;
 
+import core.gui.UpdatePanelUI;
 import core.message.*;
 import core.question.Question;
 import core.message.MessageType;
@@ -57,7 +58,7 @@ public class ClientGame {
     }
 
     public void sendDisconnect() {
-        if(!messageManager.sendMessage(new Message(EnumSet.of(MessageType.DISCONNECT)))) {
+        if(!messageManager.sendMessage(new Message(EnumSet.of(MessageType.DISCONNECT)))){
             callback.update(MessageType.DISCONNECT, null);
         }
     }
@@ -96,12 +97,6 @@ public class ClientGame {
         }
     }
 
-    private void disconnectReceived(EnumSet<MessageType> ids, Object data) {
-        if(ids.contains(MessageType.CONFIRM) && ids.contains(MessageType.DISCONNECT)) {
-            cleanUp();
-        }
-    }
-
     private void cleanUp() {
         messageManager.close();
         try {
@@ -126,7 +121,7 @@ public class ClientGame {
                 } else if(ids.contains(MessageType.SPLITHELP)) {
                     splitHelpReceived(ids, msg.getData());
                 } else if(ids.contains(MessageType.DISCONNECT)) {
-                    disconnectReceived(ids, msg.getData());
+                    cleanUp();
                 }
             } else {
                 callback.update(MessageType.DISCONNECT, null);

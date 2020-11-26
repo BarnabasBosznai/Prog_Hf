@@ -47,7 +47,6 @@ public class MainMenuPanel extends JPanel {
         title.setHorizontalAlignment(SwingConstants.CENTER);
         title.setFont(new Font("Tahoma", Font.PLAIN, 35));
         title.setPreferredSize(new Dimension(400, 45));
-        System.out.println(title.getPreferredSize());
         GroupLayout groupLayout = new GroupLayout(this);
         groupLayout.setHorizontalGroup(
                 groupLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
