@@ -11,12 +11,18 @@ public class QuestionManager {
     private List<Question> questionList = new ArrayList<>();
     private static QuestionManager instance;
 
-    public static QuestionManager getInstance(String filepath) {
-        if(instance == null) {
-            instance = new QuestionManager(filepath);
-        }
-
+    public static QuestionManager getInstance() {
         return instance;
+    }
+
+    public static void createInstance(String file) {
+        if(instance == null) {
+            synchronized (QuestionManager.class) {
+                if(instance == null) {
+                    instance = new QuestionManager(file);
+                }
+            }
+        }
     }
 
     private QuestionManager(String filepath) {

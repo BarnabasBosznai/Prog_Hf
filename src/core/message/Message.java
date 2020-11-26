@@ -7,11 +7,15 @@ import java.util.EnumSet;
 public class Message implements Serializable {
 
     private EnumSet<MessageType> messageIDs;
-    private String data;
+    private byte[] data;
+
+    public Message(EnumSet<MessageType> ids) {
+        messageIDs = ids;
+    }
 
     public Message(EnumSet<MessageType> ids, Object obj) {
         messageIDs = ids;
-        data = Base64.getEncoder().encodeToString(serialize(obj));
+        data = Base64.getEncoder().encode(serialize(obj));
     }
 
     public EnumSet<MessageType> getMessageID() {

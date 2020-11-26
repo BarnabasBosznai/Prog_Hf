@@ -17,9 +17,9 @@ public class ClientScoreboard {
         try {
             Socket socket = new Socket(ip, port);
             MessageManager messageManager = new MessageManager(new ObjectOutputStream(socket.getOutputStream()), new ObjectInputStream(socket.getInputStream()));
-            messageManager.sendMessage(new Message(EnumSet.of(MessageType.SCOREBOARD), null));
+            messageManager.sendMessage(new Message(EnumSet.of(MessageType.SCOREBOARD)));
             Message msg = messageManager.receiveMessage();
-            messageManager.sendMessage(new Message(EnumSet.of(MessageType.DISCONNECT), null));
+            messageManager.sendMessage(new Message(EnumSet.of(MessageType.DISCONNECT)));
             return (List<HighScore>)msg.getData();
         } catch (IOException e) {
             return null;

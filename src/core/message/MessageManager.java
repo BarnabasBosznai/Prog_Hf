@@ -1,7 +1,9 @@
 package core.message;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.SocketException;
 
 public class MessageManager {
     private ObjectOutputStream oos;
@@ -12,21 +14,27 @@ public class MessageManager {
         ois = objectInputStream;
     }
 
-    public void sendMessage(Message msg) {
+    public boolean sendMessage(Message msg) {
         try {
             oos.writeObject(msg);
-        } catch(Exception e) {
+            return true;
+        } catch(SocketException e) {
+            return false;
+        } catch(IOException e) {
             e.printStackTrace();
+            return false;
         }
     }
 
     public Message receiveMessage() {
         try {
             return (Message)ois.readObject();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SocketException e) {
+            return null;
+        } catch (IOException | ClassNotFoundException e) {
+            //e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
     public void close() {

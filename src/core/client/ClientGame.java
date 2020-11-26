@@ -1,36 +1,31 @@
 package core.client;
 
-import core.gui.GamePanel;
-import core.gui.MainFrame;
 import core.message.*;
 import core.question.Question;
 import core.message.MessageType;
-import javax.swing.*;
-import java.awt.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.EnumSet;
-import java.util.List;
 
 public class ClientGame {
+    private UpdatePanelUI callback;
     private Socket socket;
     private MessageManager messageManager;
     public Question question;
-    private GamePanel gamePanel;
     private boolean running;
 
-    public boolean init(String ip, int port, GamePanel gp, String name) {
+    public boolean init(String ip, int port, String name, UpdatePanelUI func) {
         try {
             socket = new Socket(ip, port);
             messageManager = new MessageManager(new ObjectOutputStream(socket.getOutputStream()), new ObjectInputStream(socket.getInputStream()));
             messageManager.sendMessage(new Message(EnumSet.of(MessageType.NEW_GAME), name));
             Message msg = messageManager.receiveMessage();
             question = (Question)msg.getData();
-            gamePanel = gp;
             running = true;
             new Thread(this::processMessage).start();
+            callback = func;
             return true;
         } catch (IOException e) {
             return false;
@@ -38,130 +33,106 @@ public class ClientGame {
     }
 
     public void sendAnswer(int index) {
-        messageManager.sendMessage(new Message(EnumSet.of(MessageType.ANSWER), index));
+        if(!messageManager.sendMessage(new Message(EnumSet.of(MessageType.ANSWER), index))) {
+            callback.update(MessageType.DISCONNECT, null);
+        }
     }
 
     public void sendCrowdHelp(boolean[] en) {
-        messageManager.sendMessage(new Message(EnumSet.of(MessageType.CROWDHELP), en));
+        if(!messageManager.sendMessage(new Message(EnumSet.of(MessageType.CROWDHELP), en))) {
+            callback.update(MessageType.DISCONNECT, null);
+        }
     }
 
     public void sendSplitHelp() {
-        messageManager.sendMessage(new Message(EnumSet.of(MessageType.SPLITHELP), null));
+        if(!messageManager.sendMessage(new Message(EnumSet.of(MessageType.SPLITHELP)))) {
+            callback.update(MessageType.DISCONNECT, null);
+        }
     }
 
     public void sendSwapQuestionHelp() {
-        messageManager.sendMessage(new Message(EnumSet.of(MessageType.SWAPQUESTIONHELP), null));
+        if(!messageManager.sendMessage(new Message(EnumSet.of(MessageType.SWAPQUESTIONHELP)))) {
+            callback.update(MessageType.DISCONNECT, null);
+        }
+    }
+
+    public void sendDisconnect() {
+        if(!messageManager.sendMessage(new Message(EnumSet.of(MessageType.DISCONNECT)))) {
+            callback.update(MessageType.DISCONNECT, null);
+        }
     }
 
     private void answerReceived(EnumSet<MessageType> ids, Object data) {
-        if(ids.contains(MessageType.CONFIRM) && ids.contains(MessageType.QUESTION)) {
+        if(ids.contains(MessageType.QUESTION)) {
             question = (Question)data;
-            gamePanel.setupUIForNextQuestionTest();
-        } else if(ids.contains(MessageType.CONFIRM) && ids.contains(MessageType.WON)) {
-            MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(gamePanel);
-            JOptionPane.showMessageDialog(frame, "Gratulálunk, megnyerte a főnyereményt: " + data + " Ft", "Winner Winner Chicken Dinner", JOptionPane.PLAIN_MESSAGE);
+            callback.update(MessageType.QUESTION, null);
+        } else if(ids.contains(MessageType.WRONG_ANSWER)){
             sendDisconnect();
             running = false;
-            frame.setGame(null);
-            CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
-            cl.removeLayoutComponent(gamePanel);
-            cl.show(frame.getContentPane(), "MENU");
-        } else {
-            MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(gamePanel);
-            JOptionPane.showMessageDialog(frame, "Rossz válasz! Nyereménye: " + data + " Ft", "Vége a játéknak!", JOptionPane.PLAIN_MESSAGE);
+            callback.update(MessageType.WRONG_ANSWER, data);
+        } else if(ids.contains(MessageType.WON)) {
             sendDisconnect();
             running = false;
-            frame.setGame(null);
-            CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
-            cl.removeLayoutComponent(gamePanel);
-            cl.show(frame.getContentPane(), "MENU");
+            callback.update(MessageType.WON, data);
         }
     }
 
     private void crowdHelpReceived(EnumSet<MessageType> ids, Object data) {
         if(ids.contains(MessageType.CONFIRM) && ids.contains(MessageType.CROWDHELP)) {
-
-            List<Integer> v2 = (List<Integer>)data;
-            if(v2 != null) {
-                JButton[] btns = gamePanel.getAnsButtons();
-                for(int i = 0; i < 4; i++) {
-                    if(btns[i].isEnabled()) {
-                        btns[i].setText(btns[i].getText() + " " + v2.get(i) + "%");
-                    }
-                }
-                gamePanel.getCrowdHelp().setEnabled(false);
-            }
+            callback.update(MessageType.CROWDHELP, data);
         }
     }
 
     private void splitHelpReceived(EnumSet<MessageType> ids, Object data) {
         if(ids.contains(MessageType.CONFIRM) && ids.contains(MessageType.SPLITHELP)) {
-            boolean[] val = (boolean[])data;
-            if(val != null) {
-                JButton[] btns = gamePanel.getAnsButtons();
-                for(int i = 0; i < 4; i++) {
-                    btns[i].setEnabled(val[i]);
-                }
-                gamePanel.getSplitHelp().setEnabled(false);
-            }
+            callback.update(MessageType.SPLITHELP, data);
         }
     }
 
     private void swapQuestionHelpReceived(EnumSet<MessageType> ids, Object data) {
         if(ids.contains(MessageType.CONFIRM) && ids.contains(MessageType.SWAPQUESTIONHELP)) {
             question = (Question)data;
-            gamePanel.setupUIForNextQuestionTest();
-            gamePanel.getNewQuestionHelp().setEnabled(false);
+            callback.update(MessageType.SWAPQUESTIONHELP, null);
         }
     }
 
     private void disconnectReceived(EnumSet<MessageType> ids, Object data) {
         if(ids.contains(MessageType.CONFIRM) && ids.contains(MessageType.DISCONNECT)) {
-            messageManager.close();
-            try {
-                socket.close();
-            } catch(Exception e) {
-                e.printStackTrace();
-            }
-        } else if(ids.contains(MessageType.ERROR) && ids.contains(MessageType.SERVERLOST)) {
-            messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.SERVERLOST), null));
-            messageManager.close();
-            try {
-                socket.close();
-            } catch(Exception e) {
-                e.printStackTrace();
-            }
-            MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(gamePanel);
-            JOptionPane.showMessageDialog(frame, "Megszakadt a kapcsolat a szerverrel!", "Kapcsolat hiba", JOptionPane.ERROR_MESSAGE);
-            CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
-            cl.show(frame.getContentPane(), "MENU");
+            cleanUp();
         }
     }
 
-    public void sendDisconnect() {
-        messageManager.sendMessage(new Message(EnumSet.of(MessageType.DISCONNECT), null));
+    private void cleanUp() {
+        messageManager.close();
+        try {
+            socket.close();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        running = false;
     }
 
-    public void processMessage() {
+    private void processMessage() {
         while(running) {
             Message msg = messageManager.receiveMessage();
-            EnumSet<MessageType> ids = msg.getMessageID();
-            if(ids.contains(MessageType.CONFIRM) ||  ids.contains(MessageType.ERROR)) {
-                if(ids.contains(MessageType.QUESTION) || ids.contains(MessageType.ANSWER) || ids.contains(MessageType.WON)) {
+            if(msg != null) {
+                EnumSet<MessageType> ids = msg.getMessageID();
+                if(ids.contains(MessageType.QUESTION) || ids.contains(MessageType.WON) || ids.contains(MessageType.WRONG_ANSWER)) {
                     answerReceived(ids, msg.getData());
-                } else if (ids.contains(MessageType.SWAPQUESTIONHELP)) {
+                } else if(ids.contains(MessageType.SWAPQUESTIONHELP)) {
                     swapQuestionHelpReceived(ids, msg.getData());
                 } else if(ids.contains(MessageType.CROWDHELP)) {
                     crowdHelpReceived(ids, msg.getData());
                 } else if(ids.contains(MessageType.SPLITHELP)) {
                     splitHelpReceived(ids, msg.getData());
-                } else if(ids.contains(MessageType.DISCONNECT) || ids.contains(MessageType.SERVERLOST)) {
+                } else if(ids.contains(MessageType.DISCONNECT)) {
                     disconnectReceived(ids, msg.getData());
-                    running = false;
                 }
+            } else {
+                callback.update(MessageType.DISCONNECT, null);
+                cleanUp();
             }
         }
-
     }
 
 }

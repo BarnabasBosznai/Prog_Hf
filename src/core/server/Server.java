@@ -19,11 +19,10 @@ public class Server {
     private ServerSocket listener;
     private Map<Socket, ClientHandle> clientHandleMap;
 
-    private QuestionManager questionManager = QuestionManager.getInstance("questions.json");
-    private HighScoreManager highScoreManager = HighScoreManager.getInstance("highscores.txt");
-
     public Server(String ip, int port) {
         try {
+            HighScoreManager.createInstance("highscores.txt");
+            QuestionManager.createInstance("questions.json");
             listener = new ServerSocket(port, 0, InetAddress.getByName(ip));
             clientHandleMap = new HashMap<>();
         } catch (IOException e) {
@@ -38,7 +37,7 @@ public class Server {
                         Socket s;
                         try {
                             s = listener.accept();
-                            ClientHandle ch = new ClientHandle(this, s, questionManager, highScoreManager);
+                            ClientHandle ch = new ClientHandle(this, s);
                             clientHandleMap.put(s, ch);
                             pool.execute(ch);
                         } catch (IOException e) {
@@ -64,43 +63,24 @@ public class Server {
                     for(Map.Entry<Socket, ClientHandle> entry : clientHandleMap.entrySet()) {
                         System.out.println(entry.getKey().toString());
                     }
-                } else {
-                    String[] arr = command.split(" ");
-                    if(arr[0].equals("KICK")) {
-                        kickClient(arr[1], Integer.parseInt(arr[2]));
-                    }
                 }
             }
         }
         shutdown();
     }
 
-    private void kickClient(String ip, int port) {
-        for(Map.Entry<Socket, ClientHandle> entry : clientHandleMap.entrySet()) {
-            if(entry.getKey().getPort() == port && entry.getKey().getInetAddress().getHostName().equals(ip)) {
-                entry.getValue().getMessageManager().sendMessage(new Message(EnumSet.of(MessageType.ERROR, MessageType.SERVERLOST), null));
-                try {
-                    Socket s = entry.getKey();
-                    clientHandleMap.remove(entry.getKey());
-                    s.close();
-                } catch(Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
     private void shutdown() {
         pool.shutdown();
         if(!pool.isTerminated()) {
             try {
-                pool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+                //pool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+                pool.awaitTermination(5000, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
         closeConnections();
-        highScoreManager.close();
+        HighScoreManager.getInstance().close();
         System.exit(0);
     }
 

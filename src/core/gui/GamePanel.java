@@ -1,10 +1,14 @@
 package core.gui;
 
 import core.client.ClientGame;
+import core.message.MessageType;
 
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
+
 import java.awt.*;
+import java.util.EnumSet;
+import java.util.List;
 
 public class GamePanel extends JPanel {
     private JLabel questionLabel = new JLabel();
@@ -14,6 +18,102 @@ public class GamePanel extends JPanel {
     private JButton[] ansButtons = new JButton[4];
 
     private ClientGame game;
+
+    private void uiCallback(MessageType id, Object data) {
+        MainFrame frame;
+        CardLayout cl;
+        switch(id) {
+            case QUESTION:
+                setupUIForNextQuestionTest();
+                break;
+            case CROWDHELP:crowdHelp.setEnabled(false);
+                List<Integer> list = (List<Integer>)data;
+                for(int i = 0; i < 4; i++) {
+                    if(ansButtons[i].isEnabled()) {
+                        ansButtons[i].setText(ansButtons[i].getText() + " " + list.get(i) + "%");
+                    }
+                }
+                break;
+            case SPLITHELP:
+                splitHelp.setEnabled(false);
+                boolean[] val = (boolean[])data;
+                for(int i = 0; i < 4; i++) {
+                    ansButtons[i].setEnabled(val[i]);
+                }
+                break;
+            case SWAPQUESTIONHELP:
+                newQuestionHelp.setEnabled(false);
+                setupUIForNextQuestionTest();
+                break;
+            case WON:
+                frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
+                JOptionPane.showMessageDialog(frame, "Gratulálunk, megnyerte a főnyereményt: " + data, "Winner Winner Chicken Dinner", JOptionPane.PLAIN_MESSAGE);
+                frame.setGame(null);
+                cl = (CardLayout)frame.getContentPane().getLayout();
+                cl.removeLayoutComponent(this);
+                cl.show(frame.getContentPane(), "MENU");
+                break;
+            case WRONG_ANSWER:
+                frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
+                JOptionPane.showMessageDialog(frame, "Rossz válasz! Nyereménye:" + data + " Ft", "Vége a játéknak!", JOptionPane.PLAIN_MESSAGE);
+                frame.setGame(null);
+                cl = (CardLayout)frame.getContentPane().getLayout();
+                cl.removeLayoutComponent(this);
+                cl.show(frame.getContentPane(), "MENU");
+                break;
+            case DISCONNECT:
+                frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
+                frame.setGame(null);
+                JOptionPane.showMessageDialog(frame, "Megszakadt a kapcsolat a szerverrel!", "Kapcsolat hiba", JOptionPane.ERROR_MESSAGE);
+                cl = (CardLayout)frame.getContentPane().getLayout();
+                cl.show(frame.getContentPane(), "MENU");
+                break;
+        }
+        /*if(ids.contains(MessageType.CONFIRM)) {
+            if(ids.contains(MessageType.ANSWER)) {
+                setupUIForNextQuestionTest();
+            } else if(ids.contains(MessageType.CROWDHELP)) {
+                crowdHelp.setEnabled(false);
+                List<Integer> list = (List<Integer>)data;
+                for(int i = 0; i < 4; i++) {
+                    if(ansButtons[i].isEnabled()) {
+                        ansButtons[i].setText(ansButtons[i].getText() + " " + list.get(i) + "%");
+                    }
+                }
+            } else if(ids.contains(MessageType.SPLITHELP)) {
+                splitHelp.setEnabled(false);
+                boolean[] val = (boolean[])data;
+                for(int i = 0; i < 4; i++) {
+                    ansButtons[i].setEnabled(val[i]);
+                }
+            } else if(ids.contains(MessageType.SWAPQUESTIONHELP)) {
+                newQuestionHelp.setEnabled(false);
+                setupUIForNextQuestionTest();
+            } else if(ids.contains(MessageType.WON)) {
+                MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
+                JOptionPane.showMessageDialog(frame, "Gratulálunk, megnyerte a főnyereményt: " + data, "Winner Winner Chicken Dinner", JOptionPane.PLAIN_MESSAGE);
+                frame.setGame(null);
+                CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
+                cl.removeLayoutComponent(this);
+                cl.show(frame.getContentPane(), "MENU");
+            }
+        } else if(ids.contains(MessageType.ERROR)) {
+            if(ids.contains(MessageType.ANSWER)) {
+                MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
+                JOptionPane.showMessageDialog(frame, "Rossz válasz! Nyereménye:" + data + " Ft", "Vége a játéknak!", JOptionPane.PLAIN_MESSAGE);
+                frame.setGame(null);
+                CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
+                cl.removeLayoutComponent(this);
+                cl.show(frame.getContentPane(), "MENU");
+            } else if(ids.contains(MessageType.DISCONNECT)) {
+                MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
+                frame.setGame(null);
+                JOptionPane.showMessageDialog(frame, "Megszakadt a kapcsolat a szerverrel!", "Kapcsolat hiba", JOptionPane.ERROR_MESSAGE);
+                CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
+                cl.show(frame.getContentPane(), "MENU");
+            }
+        }*/
+    }
 
     public boolean init(MainFrame frame, String ip, int port, String name) {
         if(setupConnection(ip, port, name)) {
@@ -27,7 +127,7 @@ public class GamePanel extends JPanel {
 
     private boolean setupConnection(String ip, int port, String name) {
         game = new ClientGame();
-        return game.init(ip, port, this,  name);
+        return game.init(ip, port, name, this::uiCallback);
     }
 
     private void setupUI() {
@@ -108,7 +208,7 @@ public class GamePanel extends JPanel {
         });
 
         crowdHelp.addActionListener((ActionListener) -> {
-            boolean en[] = new boolean[4];
+            boolean[] en = new boolean[4];
             for(int i = 0; i < 4; i++) {
                 en[i] = ansButtons[i].isEnabled();
             }
@@ -121,28 +221,12 @@ public class GamePanel extends JPanel {
     }
 
 
-    public void setupUIForNextQuestionTest() {
+    private void setupUIForNextQuestionTest() {
         questionLabel.setText(game.question.getQuestion());
         String[] ans = game.question.getAnswers();
         for(int i = 0; i < 4; i++) {
             ansButtons[i].setText(((char)(65 + i)) + ") " + ans[i]);
             ansButtons[i].setEnabled(true);
         }
-    }
-
-    public JButton getCrowdHelp() {
-        return crowdHelp;
-    }
-
-    public JButton getSplitHelp() {
-        return splitHelp;
-    }
-
-    public JButton getNewQuestionHelp() {
-        return newQuestionHelp;
-    }
-
-    public JButton[] getAnsButtons() {
-        return ansButtons;
     }
 }

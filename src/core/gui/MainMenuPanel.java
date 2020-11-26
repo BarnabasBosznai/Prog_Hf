@@ -18,7 +18,7 @@ public class MainMenuPanel extends JPanel {
                 CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
                 cl.show(frame.getContentPane(), "GAME");
             } else {
-                JOptionPane.showMessageDialog(frame, "Nem sikerült csatlakozni a szerverhez. Próbáld később!", "Csatlakozási hiba", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(frame, "Nem sikerült csatlakozni a szerverhez. Próbáld később!", "Csatlakozási hiba", JOptionPane.ERROR_MESSAGE);
             }
         });
 

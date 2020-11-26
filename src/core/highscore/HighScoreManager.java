@@ -10,10 +10,17 @@ public class HighScoreManager {
     private String highScoresFile;
     private static HighScoreManager instance;
 
-    public static HighScoreManager getInstance(String file) {
+    public static void createInstance(String file) {
         if(instance == null) {
-            instance = new HighScoreManager(file);
+            synchronized (HighScoreManager.class) {
+                if(instance == null) {
+                    instance = new HighScoreManager(file);
+                }
+            }
         }
+    }
+
+    public static HighScoreManager getInstance() {
         return instance;
     }
 
