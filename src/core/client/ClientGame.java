@@ -63,6 +63,12 @@ public class ClientGame {
         }
     }
 
+    public void sendClosed() {
+        if(!messageManager.sendMessage(new Message(EnumSet.of(MessageType.CLOSED)))) {
+            callback.update(MessageType.DISCONNECT, null);
+        }
+    }
+
     private void answerReceived(EnumSet<MessageType> ids, Object data) {
         if(ids.contains(MessageType.QUESTION)) {
             question = (Question)data;
@@ -121,6 +127,9 @@ public class ClientGame {
                 } else if(ids.contains(MessageType.SPLITHELP)) {
                     splitHelpReceived(ids, msg.getData());
                 } else if(ids.contains(MessageType.DISCONNECT)) {
+                    cleanUp();
+                } else if(ids.contains(MessageType.CLOSED)) {
+                    callback.update(MessageType.CLOSED, null);
                     cleanUp();
                 }
             } else {

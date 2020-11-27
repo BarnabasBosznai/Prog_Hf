@@ -18,7 +18,7 @@ public class GamePanel extends JPanel {
     private JButton splitHelp;
     private JButton newQuestionHelp;
     private JButton[] ansButtons = new JButton[4];
-
+    private CustomWindowListener windowListener;
     private ClientGame game;
 
     private void uiCallback(MessageType id, Object data) {
@@ -50,31 +50,45 @@ public class GamePanel extends JPanel {
             case WON:
                 frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
                 JOptionPane.showMessageDialog(frame, "Gratulálunk, megnyerte a főnyereményt: " + data, "Winner Winner Chicken Dinner", JOptionPane.PLAIN_MESSAGE);
+                frame.removeWindowListener(windowListener);
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 cl = (CardLayout)frame.getContentPane().getLayout();
                 cl.removeLayoutComponent(this);
                 cl.show(frame.getContentPane(), "MENU");
                 break;
             case WRONG_ANSWER:
                 frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
+                frame.removeWindowListener(windowListener);
                 JOptionPane.showMessageDialog(frame, "Rossz válasz! Nyereménye: " + data + " Ft", "Vége a játéknak!", JOptionPane.PLAIN_MESSAGE);
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 cl = (CardLayout)frame.getContentPane().getLayout();
                 cl.removeLayoutComponent(this);
                 cl.show(frame.getContentPane(), "MENU");
                 break;
             case DISCONNECT:
                 frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
+                frame.removeWindowListener(windowListener);
                 JOptionPane.showMessageDialog(frame, "Megszakadt a kapcsolat a szerverrel!", "Kapcsolat hiba", JOptionPane.ERROR_MESSAGE);
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 cl = (CardLayout)frame.getContentPane().getLayout();
                 cl.removeLayoutComponent(this);
                 cl.show(frame.getContentPane(), "MENU");
                 break;
+            case CLOSED:
+                frame = (MainFrame)SwingUtilities.getWindowAncestor(this);
+                frame.removeWindowListener(windowListener);
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                cl = (CardLayout)frame.getContentPane().getLayout();
+                cl.removeLayoutComponent(this);
+                cl.show(frame.getContentPane(), "MENU");
         }
     }
 
     public boolean init(MainFrame frame, String ip, int port, String name) {
         if(setupConnection(ip, port, name)) {
             frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-            frame.addWindowListener(new CustomWindowListener(this));
+            windowListener = new CustomWindowListener(this);
+            frame.addWindowListener(windowListener);
             setupUI();
             return true;
         } else {
@@ -196,16 +210,18 @@ public class GamePanel extends JPanel {
 
         @Override
         public void windowClosing(WindowEvent e) {
-            Object[] options = {"Igen", "Mégse"};
+            Object[] options = {"Kilépés", "Vissza a menübe" , "Mégse"};
             MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(gamePanel);
             for(WindowListener lis : frame.getWindowListeners()) {
                 System.out.println(lis.toString());
             }
-            int res = JOptionPane.showOptionDialog(frame, "Biztos kiakar lépni?", "Kilépés", JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,null ,options, options[0]);
+            int res = JOptionPane.showOptionDialog(frame, "Biztos kiakar lépni?", "Kilépés", JOptionPane.YES_NO_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE,null ,options, options[0]);
             if(res == JOptionPane.YES_OPTION) {
                 game.sendDisconnect();
                 frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 super.windowClosed(e);
+            } else if(res == JOptionPane.NO_OPTION) {
+                game.sendClosed();
             }
         }
     }

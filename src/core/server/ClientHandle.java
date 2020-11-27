@@ -38,16 +38,12 @@ public class ClientHandle implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
-        Message msg = messageManager.receiveMessage();
-        EnumSet<MessageType> ids = msg.getMessageID();
-        if(ids.contains(MessageType.SCOREBOARD)) {
-            messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.SCOREBOARD), HighScoreManager.getInstance().getHighScores()));
-        } else {
-            currentQuestion = QuestionManager.getInstance().getQuestionByDifficulty(++questionIndex);
-            messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.QUESTION), currentQuestion));
-            name = (String)msg.getData();
-        }
+    private void newGameResponse(Message msg) {
+        currentQuestion = QuestionManager.getInstance().getQuestionByDifficulty(++questionIndex);
+        messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.QUESTION), currentQuestion));
+        name = (String)msg.getData();
     }
 
     private void  answerResponse(Message msg) {
@@ -153,6 +149,13 @@ public class ClientHandle implements Runnable {
                         crowdHelpResponse(msg);
                     } else if(ids.contains(MessageType.DISCONNECT)) {
                         disconnectResponse();
+                    } else if(ids.contains(MessageType.CLOSED)) {
+                        messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.CLOSED)));
+                        cleanUp();
+                    } else if(ids.contains(MessageType.NEW_GAME)) {
+                        newGameResponse(msg);
+                    } else if(ids.contains(MessageType.SCOREBOARD)) {
+                        messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.SCOREBOARD), HighScoreManager.getInstance().getHighScores()));
                     }
                 } else {
                     System.out.println("Lost connection to: " + clientSocket.toString());

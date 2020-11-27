@@ -1,7 +1,6 @@
 package core.server;
+
 import core.highscore.HighScoreManager;
-import core.message.Message;
-import core.message.MessageType;
 import core.question.QuestionManager;
 
 import java.io.IOException;
@@ -60,8 +59,12 @@ public class Server {
                 } else if(command.equals("CON NUM")) {
                     System.out.println("Number of users: " + clientHandleMap.size());
                 } else if(command.equals("CON INFO")) {
-                    for(Map.Entry<Socket, ClientHandle> entry : clientHandleMap.entrySet()) {
-                        System.out.println(entry.getKey().toString());
+                    if(clientHandleMap.entrySet().size() != 0) {
+                        for(Map.Entry<Socket, ClientHandle> entry : clientHandleMap.entrySet()) {
+                            System.out.println(entry.getKey().toString());
+                        }
+                    } else {
+                        System.out.println("No information available!");
                     }
                 }
             }
