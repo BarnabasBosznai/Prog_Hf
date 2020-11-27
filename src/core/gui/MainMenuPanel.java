@@ -5,7 +5,7 @@ import java.awt.*;
 
 public class MainMenuPanel extends JPanel {
 
-    public MainMenuPanel(String ip, int port, MainFrame frame) {
+    public MainMenuPanel(MainFrame frame) {
         JButton startGame = new JButton("Új Játék");
         startGame.setPreferredSize(new Dimension(60, 25));
         startGame.setFont(new Font("Tahoma", Font.PLAIN, 22));
@@ -13,7 +13,7 @@ public class MainMenuPanel extends JPanel {
         startGame.addActionListener((ActionListener) -> {
             String name = (String)JOptionPane.showInputDialog(frame, "Enter your name!", "Enter name", JOptionPane.PLAIN_MESSAGE, null, null, "Anonymous");
             GamePanel gamePanel = new GamePanel();
-            if(gamePanel.init(frame, ip, port, name)) {
+            if(gamePanel.init(frame, name)) {
                 frame.getContentPane().add(gamePanel, "GAME");
                 CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
                 cl.show(frame.getContentPane(), "GAME");
@@ -28,7 +28,7 @@ public class MainMenuPanel extends JPanel {
         highScores.setFocusPainted(false);
         highScores.addActionListener((ActionListener) -> {
             HighScorePanel highScorePanel = new HighScorePanel();
-            if(highScorePanel.init(frame, ip, port)) {
+            if(highScorePanel.init(frame)) {
                 frame.getContentPane().add(highScorePanel, "HIGHSCORES");
                 CardLayout cl = (CardLayout)frame.getContentPane().getLayout();
                 cl.show(frame.getContentPane(), "HIGHSCORES");

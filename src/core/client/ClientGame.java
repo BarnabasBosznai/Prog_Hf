@@ -4,6 +4,7 @@ import core.gui.UpdatePanelUI;
 import core.message.*;
 import core.question.Question;
 import core.message.MessageType;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -17,9 +18,10 @@ public class ClientGame {
     public Question question;
     private boolean running;
 
-    public boolean init(String ip, int port, String name, UpdatePanelUI func) {
+    public boolean init(String name, UpdatePanelUI func) {
         try {
-            socket = new Socket(ip, port);
+            ClientConfig config = ClientConfig.read("server_data.json");
+            socket = new Socket(config.getServerIP(), config.getServerPort());
             messageManager = new MessageManager(new ObjectOutputStream(socket.getOutputStream()), new ObjectInputStream(socket.getInputStream()));
             messageManager.sendMessage(new Message(EnumSet.of(MessageType.NEW_GAME), name));
             Message msg = messageManager.receiveMessage();

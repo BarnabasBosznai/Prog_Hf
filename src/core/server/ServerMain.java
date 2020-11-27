@@ -2,7 +2,13 @@ package core.server;
 
 public class ServerMain {
     public static void main(String[] args) {
-        //new Server("server_ip",58901).start();
-        new Server("localhost",58901).start();
+        if(args.length == 1) {
+            Server server = new Server();
+            if(server.init(args[0])) {
+                server.start();
+            }
+        } else {
+            System.out.println("No configuration file provided!");
+        }
     }
 }

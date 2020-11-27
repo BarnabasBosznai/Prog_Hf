@@ -18,14 +18,18 @@ public class Server {
     private ServerSocket listener;
     private Map<Socket, ClientHandle> clientHandleMap;
 
-    public Server(String ip, int port) {
+    public boolean init(String file) {
         try {
-            HighScoreManager.createInstance("highscores.txt");
-            QuestionManager.createInstance("questions.json");
-            listener = new ServerSocket(port, 0, InetAddress.getByName(ip));
+            ServerConfig config = ServerConfig.read(file);
+            HighScoreManager.createInstance(config.getScoresData());
+            QuestionManager.createInstance(config.getQuestionData());
+            listener = new ServerSocket(config.getPort(), 0, InetAddress.getByName(config.getIp()));
             clientHandleMap = new HashMap<>();
+
+            return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
+            return false;
         }
     }
 
@@ -39,6 +43,7 @@ public class Server {
                             ClientHandle ch = new ClientHandle(this, s);
                             clientHandleMap.put(s, ch);
                             pool.execute(ch);
+                            System.out.println("New connection: " + s.toString());
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

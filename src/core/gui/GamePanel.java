@@ -84,8 +84,8 @@ public class GamePanel extends JPanel {
         }
     }
 
-    public boolean init(MainFrame frame, String ip, int port, String name) {
-        if(setupConnection(ip, port, name)) {
+    public boolean init(MainFrame frame, String name) {
+        if(setupConnection(name)) {
             frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
             windowListener = new CustomWindowListener(this);
             frame.addWindowListener(windowListener);
@@ -96,9 +96,9 @@ public class GamePanel extends JPanel {
         }
     }
 
-    private boolean setupConnection(String ip, int port, String name) {
+    private boolean setupConnection(String name) {
         game = new ClientGame();
-        return game.init(ip, port, name, this::uiCallback);
+        return game.init(name, this::uiCallback);
     }
 
     private void setupUI() {

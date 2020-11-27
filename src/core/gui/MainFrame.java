@@ -6,7 +6,7 @@ import java.awt.*;
 public class MainFrame extends JFrame {
 
     private JPanel mainPanel;
-    public MainFrame(String ip, int port) {
+    public MainFrame() {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setTitle("Legyen Ön Is Milliomos!");
         setResizable(false);
@@ -14,7 +14,7 @@ public class MainFrame extends JFrame {
         setContentPane(mainPanel);
         mainPanel.setLayout(new CardLayout());
 
-        MainMenuPanel menuPanel = new MainMenuPanel(ip, port, this);
+        MainMenuPanel menuPanel = new MainMenuPanel(this);
         mainPanel.add(menuPanel, "MENU");
 
         pack();

@@ -149,6 +149,7 @@ public class ClientHandle implements Runnable {
                         crowdHelpResponse(msg);
                     } else if(ids.contains(MessageType.DISCONNECT)) {
                         disconnectResponse();
+                        System.out.println("Disconnecting: " + clientSocket.toString());
                     } else if(ids.contains(MessageType.CLOSED)) {
                         messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.CLOSED)));
                         cleanUp();

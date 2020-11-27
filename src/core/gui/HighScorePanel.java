@@ -13,8 +13,8 @@ public class HighScorePanel extends JPanel {
     private JTable table;
     private TableModel model;
 
-    public boolean init(MainFrame frame, String ip, int port) {
-        List<HighScore> list = ClientScoreboard.getScoreboardData(ip, port);
+    public boolean init(MainFrame frame) {
+        List<HighScore> list = ClientScoreboard.getScoreboardData();
         if (list != null) {
             setupUI(frame);
             model.setModelData(list);
