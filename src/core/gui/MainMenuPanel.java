@@ -3,15 +3,22 @@ package core.gui;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * A program főmenűjét mutató JPanel.
+ */
 public class MainMenuPanel extends JPanel {
 
+    /**
+     * Főmenű panel felépítése
+     * @param frame A program frame-je
+     */
     public MainMenuPanel(MainFrame frame) {
         JButton startGame = new JButton("Új Játék");
         startGame.setPreferredSize(new Dimension(60, 25));
         startGame.setFont(new Font("Tahoma", Font.PLAIN, 22));
         startGame.setFocusPainted(false);
         startGame.addActionListener((ActionListener) -> {
-            String name = (String)JOptionPane.showInputDialog(frame, "Enter your name!", "Enter name", JOptionPane.PLAIN_MESSAGE, null, null, "Anonymous");
+            String name = (String)JOptionPane.showInputDialog(frame, "Kérem adja meg a nevét.", "Név megadás", JOptionPane.PLAIN_MESSAGE, null, null, "Anonymous");
             GamePanel gamePanel = new GamePanel();
             if(gamePanel.init(frame, name)) {
                 frame.getContentPane().add(gamePanel, "GAME");

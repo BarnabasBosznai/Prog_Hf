@@ -1,6 +1,13 @@
 package core.server;
 
+/**
+ * Szerver program main-je
+ */
 public class ServerMain {
+    /**
+     * Szerver program belépési pontja.
+     * @param args Parancssori argument a konfigurációs fájlhoz.
+     */
     public static void main(String[] args) {
         if(args.length == 1) {
             Server server = new Server();

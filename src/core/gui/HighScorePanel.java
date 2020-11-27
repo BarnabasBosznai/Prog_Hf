@@ -9,10 +9,18 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A program felhasználóinak elért eredményét mutató JPanel.
+ */
 public class HighScorePanel extends JPanel {
     private JTable table;
     private TableModel model;
 
+    /**
+     * Csatlakozik a szerverhez és felépíti a panelt.
+     * @param frame A program frame-je
+     * @return Igazzal tér vissza, ha sikerült lekérni az adatokat és felépíteni a panelt, különben hamis
+     */
     public boolean init(MainFrame frame) {
         List<HighScore> list = ClientScoreboard.getScoreboardData();
         if (list != null) {
@@ -24,6 +32,10 @@ public class HighScorePanel extends JPanel {
         }
     }
 
+    /**
+     * Felépíti a panelt.
+     * @param frame A program frame-je
+     */
     private void setupUI(MainFrame frame) {
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -95,10 +107,17 @@ public class HighScorePanel extends JPanel {
         setLayout(groupLayout);
     }
 
+    /**
+     * Eredmények tábla szerkezete.
+     */
     private class TableModel extends AbstractTableModel {
 
         private List<HighScore> scores = new ArrayList<>();
 
+        /**
+         * Beállítja a táblázat adatait.
+         * @param highScores Eredmények lista
+         */
         public void setModelData(List<HighScore> highScores) {
             scores = highScores;
             fireTableDataChanged();

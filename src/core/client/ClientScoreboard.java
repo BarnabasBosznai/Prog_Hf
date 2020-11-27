@@ -12,10 +12,17 @@ import java.net.Socket;
 import java.util.EnumSet;
 import java.util.List;
 
+/**
+ * Kliens program eredményeket kezelő logikája.
+ */
 public class ClientScoreboard {
+    /**
+     * Csatlakozik a szerverhez, hogy lekérje a korábbi felhasználok játékban elért eredményét.
+     * @return Lista az eredményekről vagy <code>null</code>, ha hiba történt.
+     */
     public static List<HighScore> getScoreboardData() {
         try {
-            ClientConfig config = ClientConfig.read("server_data.json");
+            ClientConfig config = ClientConfig.read("client_config.json");
             Socket socket = new Socket(config.getServerIP(), config.getServerPort());
             MessageManager messageManager = new MessageManager(new ObjectOutputStream(socket.getOutputStream()), new ObjectInputStream(socket.getInputStream()));
             messageManager.sendMessage(new Message(EnumSet.of(MessageType.SCOREBOARD)));

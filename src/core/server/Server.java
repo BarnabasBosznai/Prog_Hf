@@ -3,6 +3,8 @@ package core.server;
 import core.highscore.HighScoreManager;
 import core.question.QuestionManager;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -27,8 +29,10 @@ public class Server {
             clientHandleMap = new HashMap<>();
 
             return true;
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage() + "! Cannot start without question data!");
+            return false;
         } catch (IOException e) {
-            System.out.println(e.getMessage());
             return false;
         }
     }
@@ -88,7 +92,7 @@ public class Server {
             }
         }
         closeConnections();
-        HighScoreManager.getInstance().close();
+        HighScoreManager.getInstance().save();
         System.exit(0);
     }
 

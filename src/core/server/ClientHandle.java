@@ -13,6 +13,9 @@ import java.net.Socket;
 import java.time.LocalDate;
 import java.util.*;
 
+/**
+ * Kliens kapcsolatot kezelő osztály.
+ */
 public class ClientHandle implements Runnable {
     private Server serverRef;
     private Socket clientSocket;
@@ -30,6 +33,11 @@ public class ClientHandle implements Runnable {
     String[] prizes = { "0", "5.000", "10.000","25.000", "50.000", "100.000", "200.000", "300.000", "500.000", "800.000",
                         "1.500.000", "3.000.000", "5.000.000", "10.000.000", "20.000.000", "40.000.000" };
 
+    /**
+     * Új kezelő létrehozása.
+     * @param server Szerver
+     * @param s Socket
+     */
     public ClientHandle(Server server, Socket s) {
         serverRef = server;
         clientSocket = s;
@@ -40,12 +48,20 @@ public class ClientHandle implements Runnable {
         }
     }
 
+    /**
+     * Új játék indítása kérés feldolgozása.
+     * @param msg Üzenet
+     */
     private void newGameResponse(Message msg) {
         currentQuestion = QuestionManager.getInstance().getQuestionByDifficulty(++questionIndex);
         messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.QUESTION), currentQuestion));
         name = (String)msg.getData();
     }
 
+    /**
+     * Egy kérdésre adott válasz feldolgozása.
+     * @param msg Üzenet
+     */
     private void  answerResponse(Message msg) {
         int ansIdx = (int)msg.getData();
         if(ansIdx == currentQuestion.getAnswerIndex()) {
@@ -67,6 +83,9 @@ public class ClientHandle implements Runnable {
         }
     }
 
+    /**
+     * Kérdés csere segítség feldolgozása.
+     */
     private void swapQuestionHelpResponse() {
         if(swapQuestionHelp) {
             currentQuestion = QuestionManager.getInstance().getQuestionByDifficulty(questionIndex);
@@ -74,6 +93,9 @@ public class ClientHandle implements Runnable {
         }
     }
 
+    /**
+     * Felezés segítség feldolgozása.
+     */
     private void splitHelpResponse() {
         if(splitHelp) {
             splitHelp = false;
@@ -95,6 +117,10 @@ public class ClientHandle implements Runnable {
         }
     }
 
+    /**
+     * Szavazás segítésg feldolgozása.
+     * @param msg Üzenet
+     */
     private void crowdHelpResponse(Message msg) {
         if(crowdHelp) {
             boolean[] en = (boolean[])msg.getData();
@@ -127,11 +153,9 @@ public class ClientHandle implements Runnable {
         }
     }
 
-    private void disconnectResponse() {
-        messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.DISCONNECT)));
-        cleanUp();
-    }
-
+    /**
+     * Érkező üzenetek felismerése és továbbítása.
+     */
     @Override
     public void run() {
         while(running) {
@@ -148,7 +172,8 @@ public class ClientHandle implements Runnable {
                     } else if(ids.contains(MessageType.CROWDHELP)) {
                         crowdHelpResponse(msg);
                     } else if(ids.contains(MessageType.DISCONNECT)) {
-                        disconnectResponse();
+                        messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.DISCONNECT)));
+                        cleanUp();
                         System.out.println("Disconnecting: " + clientSocket.toString());
                     } else if(ids.contains(MessageType.CLOSED)) {
                         messageManager.sendMessage(new Message(EnumSet.of(MessageType.CONFIRM, MessageType.CLOSED)));
@@ -169,6 +194,11 @@ public class ClientHandle implements Runnable {
         }
     }
 
+    /**
+     * @param targetSum Cél összeg
+     * @param numberOfDraws Hány db
+     * @return <code>numberOfDraws</code> darabszámú <code>targetSum</code> összegű véletlen számot generál.
+     */
     private List<Integer> n_random(int targetSum, int numberOfDraws) {
         Random r = new Random();
         List<Integer> list = new ArrayList<>();
@@ -194,6 +224,9 @@ public class ClientHandle implements Runnable {
         return list;
     }
 
+    /**
+     * Kapcsolat bontása.
+     */
     private void cleanUp() {
         try {
             running = false;

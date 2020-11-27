@@ -12,6 +12,9 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.List;
 
+/**
+ * A program játék részét mutató JPanel.
+ */
 public class GamePanel extends JPanel {
     private JLabel questionLabel = new JLabel();
     private JButton crowdHelp;
@@ -21,6 +24,12 @@ public class GamePanel extends JPanel {
     private CustomWindowListener windowListener;
     private ClientGame game;
 
+    /**
+     * Callback függvény, amit a játék logikájának adunk át, hogy meghívja,
+     * amikor feldolgozott egy üzenetet a szervertől és frissítse a grafikus felületet.
+     * @param id Üzenet típusa
+     * @param data Opcionális adat
+     */
     private void uiCallback(MessageType id, Object data) {
         MainFrame frame;
         CardLayout cl;
@@ -84,8 +93,15 @@ public class GamePanel extends JPanel {
         }
     }
 
+    /**
+     * Csatlakozik a szerverhez és felépíti a panelt.
+     * @param frame Program frame-je
+     * @param name Felhasználó neve
+     * @return Igazzal tér vissza, ha sikerült csatlakozni a szerverhez és felépűlt a panel, különben hamis
+     */
     public boolean init(MainFrame frame, String name) {
-        if(setupConnection(name)) {
+        game = new ClientGame();
+        if(game.init(name, this::uiCallback)) {
             frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
             windowListener = new CustomWindowListener(this);
             frame.addWindowListener(windowListener);
@@ -96,11 +112,9 @@ public class GamePanel extends JPanel {
         }
     }
 
-    private boolean setupConnection(String name) {
-        game = new ClientGame();
-        return game.init(name, this::uiCallback);
-    }
-
+    /**
+     * Panel felépítése.
+     */
     private void setupUI() {
         crowdHelp = new JButton("Szavazás");
         crowdHelp.setPreferredSize(new Dimension(120, 60));
@@ -191,6 +205,9 @@ public class GamePanel extends JPanel {
         });
     }
 
+    /**
+     * Frissíti a panel az új kérdés megjelenítésére.
+     */
     private void setupUIForNextQuestionTest() {
         questionLabel.setText(game.question.getQuestion());
         String[] ans = game.question.getAnswers();
@@ -200,6 +217,9 @@ public class GamePanel extends JPanel {
         }
     }
 
+    /**
+     * Egy egyedi window listener, amikor játék folyik.
+     */
     private class CustomWindowListener extends WindowAdapter {
 
         private GamePanel gamePanel;
@@ -212,9 +232,6 @@ public class GamePanel extends JPanel {
         public void windowClosing(WindowEvent e) {
             Object[] options = {"Kilépés", "Vissza a menübe" , "Mégse"};
             MainFrame frame = (MainFrame)SwingUtilities.getWindowAncestor(gamePanel);
-            for(WindowListener lis : frame.getWindowListeners()) {
-                System.out.println(lis.toString());
-            }
             int res = JOptionPane.showOptionDialog(frame, "Biztos kiakar lépni?", "Kilépés", JOptionPane.YES_NO_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE,null ,options, options[0]);
             if(res == JOptionPane.YES_OPTION) {
                 game.sendDisconnect();

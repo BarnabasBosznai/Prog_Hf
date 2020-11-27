@@ -2,6 +2,9 @@ package core.question;
 
 import java.io.Serializable;
 
+/**
+ * Egy kérdés információit tároló osztály.
+ */
 public class Question implements Serializable {
     private String question;
     private String[] answers;
@@ -9,6 +12,14 @@ public class Question implements Serializable {
     private int answerIndex;
     private String category;
 
+    /**
+     * Új kérdés létrehozása.
+     * @param q Kérdés
+     * @param ans Válaszlehetőségek
+     * @param diff Kérdés nehézsége
+     * @param ansIdx Helyes válasz indexe
+     * @param cat Kérdés kategoriája
+     */
     public Question(String q, String[] ans, int diff, int ansIdx, String cat) {
         question = q;
         answers = ans;
@@ -17,26 +28,37 @@ public class Question implements Serializable {
         category = cat;
     }
 
+    /**
+     * @return Kérdés szövege
+     */
     public String getQuestion() {
         return question;
     }
 
+    /**
+     * @return Válaszlehetőségek
+     */
     public String[] getAnswers() {
         return answers;
     }
 
-    public String getAnswer() {
-        return answers[answerIndex];
-    }
-
+    /**
+     * @return Kérdés nehézsége
+     */
     public int getDifficulty() {
         return difficulty;
     }
 
+    /**
+     * @return Helyes válasz indexe
+     */
     public int getAnswerIndex() {
         return answerIndex;
     }
 
+    /**
+     * @return Kérdés kategoriája
+     */
     public String getCategory() {
         return category;
     }
