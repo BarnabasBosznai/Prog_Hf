@@ -3,7 +3,6 @@ package core.server;
 import core.highscore.HighScoreManager;
 import core.question.QuestionManager;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -14,12 +13,20 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Játék szerver osztálya.
+ */
 public class Server {
     private ExecutorService pool = Executors.newFixedThreadPool(8);
     private volatile boolean running = true;
     private ServerSocket listener;
     private Map<Socket, ClientHandle> clientHandleMap;
 
+    /**
+     * Szerver osztály inicializálója.
+     * @param file Konfigurációs fájl útvonala
+     * @return Igazzal tér vissza, ha sikerült inicializálni a szervert, különben hamis
+     */
     public boolean init(String file) {
         try {
             ServerConfig config = ServerConfig.read(file);
@@ -37,6 +44,9 @@ public class Server {
         }
     }
 
+    /**
+     * Elindítja a szervert és fogadni kezdi a beérkező kapcsolatokat.
+     */
     public void start() {
         System.out.println("Server starting...");
         Thread socketConnectionAsync = new Thread(() -> {
@@ -78,15 +88,19 @@ public class Server {
                 }
             }
         }
-        shutdown();
+        shutdown(60000);
     }
 
-    private void shutdown() {
+    /**
+     * Szerver leállítója. Kiadás után több kapcsolatot nem fogad, de az éppen aktív kapcsolatokat nem szűnteti
+     * meg azonnal, csak egy timeout érték után.
+     * @param timeout timeout értéke
+     */
+    private void shutdown(long timeout) {
         pool.shutdown();
         if(!pool.isTerminated()) {
             try {
-                //pool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
-                pool.awaitTermination(60000, TimeUnit.MILLISECONDS);
+                pool.awaitTermination(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -96,10 +110,17 @@ public class Server {
         System.exit(0);
     }
 
+    /**
+     * Kapcsolat törlése az aktív kapcsolatok közül.
+     * @param s Kliens socket
+     */
     public synchronized void removeConnection(Socket s) {
         clientHandleMap.remove(s);
     }
 
+    /**
+     * Minden aktív kapcsolat lezárása.
+     */
     private void closeConnections() {
         for(Map.Entry<Socket, ClientHandle> entry : clientHandleMap.entrySet()) {
             try {
